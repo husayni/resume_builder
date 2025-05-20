@@ -1,0 +1,73 @@
+name: Your Full Name
+contact:
+  phone: "+1 (123) 456-7890"
+  email: your.email@example.com
+  linkedin: your-linkedin-username
+  github: your-github-username
+
+education:
+  - school: University Name
+    location: City, State
+    degree: Degree Name (e.g., Bachelor of Science in Computer Science)
+    dates: "2020 - 2024"
+
+  - school: Another University (if applicable)
+    location: City, State
+    degree: Another Degree
+    dates: "2016 - 2020"
+
+experience:
+  - company: Company Name
+    role: Your Job Title
+    location: City, State
+    dates: "Jan 2023 - Present"
+    bullets:
+      - "Accomplished [specific achievement] resulting in [specific measurable outcome]"
+      - "Led a team of X people to deliver [project/product] that [specific result]"
+      - "Implemented [specific technology/process] that improved [specific metric] by X%"
+
+  - company: Previous Company
+    role: Previous Job Title
+    location: City, State
+    dates: "Jun 2021 - Dec 2022"
+    bullets:
+      - "Developed [feature/product] using [technologies] that [specific outcome]"
+      - "Collaborated with cross-functional teams to [specific achievement]"
+      - "Optimized [process/system] resulting in [specific improvement]"
+
+projects:
+  - name: Project Name
+    link: https://github.com/yourusername/project-name
+    bullets:
+      - "Built a [type of application] using [technologies/frameworks]"
+      - "Implemented [specific feature] that [specific outcome]"
+      - "Designed and developed [specific component] to solve [specific problem]"
+
+  - name: Another Project
+    link: https://github.com/yourusername/another-project
+    bullets:
+      - "Created a [type of application] that [specific purpose]"
+      - "Utilized [technologies/frameworks] to implement [specific functionality]"
+      - "Improved [specific metric] by [specific amount] through [specific approach]"
+
+skills:
+  - category: Languages
+    list:
+      - Python
+      - JavaScript
+      - Java
+      - SQL
+
+  - category: Frameworks
+    list:
+      - React
+      - Django
+      - Spring Boot
+      - Express.js
+
+  - category: Tools
+    list:
+      - Git
+      - Docker
+      - AWS
+      - CI/CD
