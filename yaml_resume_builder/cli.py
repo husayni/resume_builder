@@ -6,7 +6,6 @@ This module provides a command-line interface for building resumes from YAML fil
 import os
 import shutil
 import sys
-from typing import Optional
 
 import click
 
@@ -37,23 +36,15 @@ def cli() -> None:
     type=click.Path(file_okay=True, dir_okay=False, writable=True),
     help="Path to save the output PDF file.",
 )
-@click.option(
-    "--template",
-    "-t",
-    required=False,
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
-    help="Path to the LaTeX template file (not used).",
-)
-def build(input: str, output: str, template: Optional[str] = None) -> None:
+def build(input: str, output: str) -> None:
     """Build a resume from a YAML file.
 
     Args:
         input (str): Path to the input YAML file.
         output (str): Path to save the output PDF file.
-        template (str, optional): Path to the LaTeX template file (not used).
     """
     try:
-        output_path = build_resume(input, output, template)
+        output_path = build_resume(input, output)
         click.echo(f"Resume successfully built and saved to: {output_path}")
     except Exception as e:
         click.echo(f"Error building resume: {e}", err=True)

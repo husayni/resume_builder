@@ -7,7 +7,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 import yaml
 
@@ -30,12 +30,10 @@ def load_yaml(input_path: str) -> Dict[str, Any]:
     with open(input_path, "r") as file:
         try:
             data = yaml.safe_load(file)
-            if data is None:
-                return {}
-            return dict(data)  # Ensure we return a Dict[str, Any]
+            return {} if data is None else dict(data)
         except Exception as e:
             # Wrap any exception in a YAMLError for consistency
-            raise yaml.YAMLError(f"Error parsing YAML file: {e}")
+            raise yaml.YAMLError(f"Error parsing YAML file: {e}") from e
 
 
 def compile_latex(tex_path: str, output_dir: str) -> str:
@@ -95,13 +93,12 @@ def compile_latex(tex_path: str, output_dir: str) -> str:
         raise
 
 
-def build_resume(input_path: str, output_path: str, template_path: Optional[str] = None) -> str:
+def build_resume(input_path: str, output_path: str) -> str:
     """Build a resume from a YAML file.
 
     Args:
         input_path (str): Path to the YAML file.
         output_path (str): Path to save the generated PDF.
-        template_path (str, optional): Path to the LaTeX template (not used).
 
     Returns:
         str: Path to the generated PDF file.
@@ -121,7 +118,7 @@ def build_resume(input_path: str, output_path: str, template_path: Optional[str]
     # Create a temporary directory for LaTeX compilation
     with tempfile.TemporaryDirectory() as temp_dir:
         # Render the template
-        tex_content = render_template(template_path or "", resume_data)
+        tex_content = render_template(resume_data)
 
         # Write the rendered template to a temporary file
         temp_tex_path = os.path.join(temp_dir, "resume.tex")

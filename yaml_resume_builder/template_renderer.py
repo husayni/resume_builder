@@ -44,12 +44,23 @@ def escape_latex(text: Any) -> Any:
 
 
 # Define known fields for validation
-KNOWN_ROOT_FIELDS = {"name", "contact", "education", "experience", "projects", "skills"}
+KNOWN_ROOT_FIELDS = {
+    "name",
+    "contact",
+    "education",
+    "experience",
+    "projects",
+    "skills",
+    "achievements",
+    "publications",
+}
 KNOWN_CONTACT_FIELDS = {"phone", "email", "linkedin", "github"}
 KNOWN_EDUCATION_FIELDS = {"school", "location", "degree", "dates"}
 KNOWN_EXPERIENCE_FIELDS = {"company", "role", "location", "dates", "bullets"}
 KNOWN_PROJECT_FIELDS = {"name", "technologies", "date", "link", "bullets"}
 KNOWN_SKILLS_FIELDS = {"category", "list"}
+KNOWN_ACHIEVEMENT_FIELDS = {"title", "issuer", "date", "description", "bullets"}
+KNOWN_PUBLICATION_FIELDS = {"title", "authors", "journal", "date", "link", "bullets"}
 
 
 def validate_root_fields(data: Dict[str, Any]) -> None:
@@ -120,12 +131,207 @@ def validate_data(data: Dict[str, Any]) -> None:
     if "skills" in data and isinstance(data["skills"], list):
         validate_list_entries(data["skills"], KNOWN_SKILLS_FIELDS, "skills")
 
+    # Validate achievements fields
+    if "achievements" in data and isinstance(data["achievements"], list):
+        validate_list_entries(data["achievements"], KNOWN_ACHIEVEMENT_FIELDS, "achievement")
 
-def render_template(template_path: str, data: Dict[str, Any]) -> str:
+    # Validate publications fields
+    if "publications" in data and isinstance(data["publications"], list):
+        validate_list_entries(data["publications"], KNOWN_PUBLICATION_FIELDS, "publication")
+
+
+def _build_education_section(data: Dict[str, Any]) -> str:
+    """Build the education section of the resume.
+
+    Args:
+        data (dict): The resume data.
+
+    Returns:
+        str: The formatted education section.
+    """
+    education_section = ""
+    for edu in data["education"]:
+        education_section += r"\resumeSubheading" + "\n"
+        education_section += (
+            r"  {"
+            + escape_latex(edu["school"])
+            + r"}{"
+            + escape_latex(edu["location"])
+            + r"}"
+            + "\n"
+        )
+        education_section += (
+            r"  {" + escape_latex(edu["degree"]) + r"}{" + escape_latex(edu["dates"]) + r"}" + "\n"
+        )
+    return education_section
+
+
+def _build_experience_section(data: Dict[str, Any]) -> str:
+    """Build the experience section of the resume.
+
+    Args:
+        data (dict): The resume data.
+
+    Returns:
+        str: The formatted experience section.
+    """
+    experience_section = ""
+    for exp in data["experience"]:
+        experience_section += r"\resumeSubheading" + "\n"
+        experience_section += (
+            r"  {" + escape_latex(exp["role"]) + r"}{" + escape_latex(exp["dates"]) + r"}" + "\n"
+        )
+        experience_section += (
+            r"  {"
+            + escape_latex(exp["company"])
+            + r"}{"
+            + escape_latex(exp["location"])
+            + r"}"
+            + "\n"
+        )
+        experience_section += r"  \resumeItemListStart" + "\n"
+        for bullet in exp["bullets"]:
+            experience_section += r"    \resumeItem{" + escape_latex(bullet) + r"}" + "\n"
+        experience_section += r"  \resumeItemListEnd" + "\n"
+    return experience_section
+
+
+def _build_projects_section(data: Dict[str, Any]) -> str:
+    """Build the projects section of the resume.
+
+    Args:
+        data (dict): The resume data.
+
+    Returns:
+        str: The formatted projects section.
+    """
+    projects_section = ""
+    for project in data["projects"]:
+        projects_section += r"\resumeProjectHeading" + "\n"
+
+        # Build project title with name and technologies
+        project_title = r"{\textbf{" + escape_latex(project["name"]) + r"}"
+
+        # Add technologies if available
+        if "technologies" in project and project["technologies"]:
+            project_title += r" $|$ \emph{" + escape_latex(project["technologies"]) + r"}"
+        # Otherwise use link if available (for backward compatibility)
+        elif "link" in project and project["link"]:
+            project_title += r" $|$ \emph{" + escape_latex(project["link"]) + r"}"
+
+        # Add date if available
+        if "date" in project and project["date"]:
+            project_title += r"}{" + escape_latex(project["date"]) + r"}"
+        else:
+            project_title += r"}{}"
+
+        projects_section += r"  " + project_title + "\n"
+        projects_section += r"  \resumeItemListStart" + "\n"
+        for bullet in project["bullets"]:
+            projects_section += r"    \resumeItem{" + escape_latex(bullet) + r"}" + "\n"
+        projects_section += r"  \resumeItemListEnd" + "\n"
+    return projects_section
+
+
+def _build_skills_section(data: Dict[str, Any]) -> str:
+    """Build the skills section of the resume.
+
+    Args:
+        data (dict): The resume data.
+
+    Returns:
+        str: The formatted skills section.
+    """
+    skills_section = ""
+    for skill in data["skills"]:
+        skills_section += (
+            r"\textbf{"
+            + escape_latex(skill["category"])
+            + r"}{: "
+            + escape_latex(", ".join(skill["list"]))
+            + r"} \\"
+            + "\n"
+        )
+    return skills_section
+
+
+def _format_achievement(achievement: Dict[str, Any]) -> str:
+    """Format a single achievement entry.
+
+    Args:
+        achievement (dict): The achievement data.
+
+    Returns:
+        str: The formatted achievement text.
+    """
+    # Format: Achievement title at Organization (Year)
+    achievement_text = ""
+    if "title" in achievement:
+        achievement_text += escape_latex(achievement["title"])
+
+    if "issuer" in achievement and achievement["issuer"]:
+        achievement_text += " at " + escape_latex(achievement["issuer"])
+
+    if "date" in achievement and achievement["date"]:
+        achievement_text += " (" + escape_latex(achievement["date"]) + ")"
+
+    return r"    \resumeItem{" + achievement_text + r"}" + "\n"
+
+
+def _format_publication(publication: Dict[str, Any]) -> str:
+    """Format a single publication entry.
+
+    Args:
+        publication (dict): The publication data.
+
+    Returns:
+        str: The formatted publication text.
+    """
+    # Format: "Publication title" in Journal (Year)
+    publication_text = ""
+    if "title" in publication:
+        publication_text += r"``" + escape_latex(publication["title"]) + r"''"
+
+    if "journal" in publication and publication["journal"]:
+        publication_text += " in " + escape_latex(publication["journal"])
+
+    if "date" in publication and publication["date"]:
+        publication_text += " (" + escape_latex(publication["date"]) + ")"
+
+    return r"    \resumeItem{" + publication_text + r"}" + "\n"
+
+
+def _build_achievements_publications_section(data: Dict[str, Any]) -> str:
+    """Build the achievements and publications section of the resume.
+
+    Args:
+        data (dict): The resume data.
+
+    Returns:
+        str: The formatted achievements and publications section.
+    """
+    section = r"\resumeItemListStart" + "\n"
+
+    # Add achievements if available
+    if "achievements" in data and data["achievements"]:
+        for achievement in data["achievements"]:
+            section += _format_achievement(achievement)
+
+    # Add publications if available
+    if "publications" in data and data["publications"]:
+        for publication in data["publications"]:
+            section += _format_publication(publication)
+
+    # End the item list
+    section += r"  \resumeItemListEnd" + "\n"
+
+    return section
+
+
+def render_template(data: Dict[str, Any]) -> str:
     """Render a LaTeX template with the given data.
 
     Args:
-        template_path (str): Path to the LaTeX template (not used).
         data (dict): Data to render the template with.
 
     Returns:
@@ -154,91 +360,13 @@ def render_template(template_path: str, data: Dict[str, Any]) -> str:
         "{{github}}", escape_latex(data["contact"]["github"])
     )
 
-    # Build education section
-    education_section = ""
-    for edu in data["education"]:
-        education_section += r"\resumeSubheading" + "\n"
-        education_section += (
-            r"  {"
-            + escape_latex(edu["school"])
-            + r"}{"
-            + escape_latex(edu["location"])
-            + r"}"
-            + "\n"
-        )
-        education_section += (
-            r"  {" + escape_latex(edu["degree"]) + r"}{" + escape_latex(edu["dates"]) + r"}" + "\n"
-        )
-
-    # Replace education section
-    template_content = template_content.replace("{{education}}", education_section)
-
-    # Build experience section
-    experience_section = ""
-    for exp in data["experience"]:
-        experience_section += r"\resumeSubheading" + "\n"
-        experience_section += (
-            r"  {" + escape_latex(exp["role"]) + r"}{" + escape_latex(exp["dates"]) + r"}" + "\n"
-        )
-        experience_section += (
-            r"  {"
-            + escape_latex(exp["company"])
-            + r"}{"
-            + escape_latex(exp["location"])
-            + r"}"
-            + "\n"
-        )
-        experience_section += r"  \resumeItemListStart" + "\n"
-        for bullet in exp["bullets"]:
-            experience_section += r"    \resumeItem{" + escape_latex(bullet) + r"}" + "\n"
-        experience_section += r"  \resumeItemListEnd" + "\n"
-
-    # Replace experience section
-    template_content = template_content.replace("{{experience}}", experience_section)
-
-    # Build projects section
-    projects_section = ""
-    for project in data["projects"]:
-        projects_section += r"\resumeProjectHeading" + "\n"
-
-        # Build project title with name and technologies
-        project_title = r"{\textbf{" + escape_latex(project["name"]) + r"}"
-
-        # Add technologies if available
-        if "technologies" in project and project["technologies"]:
-            project_title += r" $|$ \emph{" + escape_latex(project["technologies"]) + r"}"
-        # Otherwise use link if available (for backward compatibility)
-        elif "link" in project and project["link"]:
-            project_title += r" $|$ \emph{" + escape_latex(project["link"]) + r"}"
-
-        # Add date if available
-        if "date" in project and project["date"]:
-            project_title += r"}{" + escape_latex(project["date"]) + r"}"
-        else:
-            project_title += r"}{}"
-
-        projects_section += r"  " + project_title + "\n"
-        projects_section += r"  \resumeItemListStart" + "\n"
-        for bullet in project["bullets"]:
-            projects_section += r"    \resumeItem{" + escape_latex(bullet) + r"}" + "\n"
-        projects_section += r"  \resumeItemListEnd" + "\n"
-
-    # Replace projects section
-    template_content = template_content.replace("{{projects}}", projects_section)
-
-    # Build skills section
-    skills_section = ""
-    for skill in data["skills"]:
-        skills_section += (
-            r"\textbf{"
-            + escape_latex(skill["category"])
-            + r"}{: "
-            + escape_latex(", ".join(skill["list"]))
-            + r"} \\"
-            + "\n"
-        )
-
-    # Replace skills section
-    template_content = template_content.replace("{{skills}}", skills_section)
+    # Build and replace sections
+    template_content = template_content.replace("{{education}}", _build_education_section(data))
+    template_content = template_content.replace("{{experience}}", _build_experience_section(data))
+    template_content = template_content.replace("{{projects}}", _build_projects_section(data))
+    template_content = template_content.replace("{{skills}}", _build_skills_section(data))
+    template_content = template_content.replace(
+        "{{achievements_publications}}", _build_achievements_publications_section(data)
+    )
 
     return template_content
