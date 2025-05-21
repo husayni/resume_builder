@@ -54,28 +54,47 @@ jobs:
         run: |
           twine check dist/*
 
-      - name: Verify package name availability
+      - name: Check if version exists on PyPI
+        id: version_check
         run: |
-          # Extract package name from pyproject.toml
+          # Extract package name and version from pyproject.toml
           PACKAGE_NAME=$(grep -m 1 'name = ' pyproject.toml | sed 's/name = "\(.*\)"/\1/')
-          echo "Checking availability of package name: $PACKAGE_NAME"
+          PACKAGE_VERSION=$(grep -m 1 'version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
+          echo "Checking if version $PACKAGE_VERSION of package $PACKAGE_NAME exists on PyPI"
 
-          # Check if package exists on PyPI
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/project/$PACKAGE_NAME/")
+          # Check if the specific version exists on PyPI
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/project/$PACKAGE_NAME/$PACKAGE_VERSION/")
 
           if [ "$HTTP_STATUS" = "200" ]; then
-            # Package exists, check if we own it
-            echo "Package name '$PACKAGE_NAME' already exists on PyPI."
-            echo "Make sure you own this package or choose a different name."
-            echo "Continuing with publish step, which will succeed only if you own the package."
+            # Version already exists
+            echo "Version $PACKAGE_VERSION of package $PACKAGE_NAME already exists on PyPI."
+            echo "Skipping publish step."
+            echo "should_publish=false" >> $GITHUB_OUTPUT
           elif [ "$HTTP_STATUS" = "404" ]; then
-            echo "Package name '$PACKAGE_NAME' is available on PyPI."
+            # Version doesn't exist, check if package exists
+            PACKAGE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/project/$PACKAGE_NAME/")
+
+            if [ "$PACKAGE_STATUS" = "200" ]; then
+              echo "Package $PACKAGE_NAME exists on PyPI, but version $PACKAGE_VERSION is new."
+              echo "Will publish new version."
+              echo "should_publish=true" >> $GITHUB_OUTPUT
+            elif [ "$PACKAGE_STATUS" = "404" ]; then
+              echo "Package $PACKAGE_NAME is new on PyPI."
+              echo "Will publish new package."
+              echo "should_publish=true" >> $GITHUB_OUTPUT
+            else
+              echo "Unexpected status code: $PACKAGE_STATUS when checking package name."
+              echo "Continuing with publish step."
+              echo "should_publish=true" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "Unexpected status code: $HTTP_STATUS when checking package name."
+            echo "Unexpected status code: $HTTP_STATUS when checking version."
             echo "Continuing with publish step."
+            echo "should_publish=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Publish to PyPI
+        if: steps.version_check.outputs.should_publish == 'true'
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.PYPI_TOKEN }}
