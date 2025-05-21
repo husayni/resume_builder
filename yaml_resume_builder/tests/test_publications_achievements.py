@@ -83,10 +83,11 @@ def test_render_template_with_empty_sections() -> None:
 
     # Check that the template is rendered correctly
     assert "Test User" in rendered
-    assert "Achievements \\& Publications" in rendered
-    # The section should be empty but present
-    assert "\\resumeItemListStart" in rendered
-    assert "\\resumeItemListEnd" in rendered
+    # The Achievements & Publications section should not be present
+    assert "\\section{Achievements \\& Publications}" not in rendered
+    # The section markers should not be present
+    assert "%-----------Achievements / Publications / Certifications-----------" not in rendered
+    assert "%-------------------------------------------" not in rendered
 
 
 def test_render_template_with_special_characters() -> None:
@@ -126,3 +127,73 @@ def test_render_template_with_special_characters() -> None:
     # Check that special characters are properly escaped
     assert "Award for 100\\% Test Coverage at Company \\& Partners (2023)" in rendered
     assert "``Testing with LaTeX: A\\_Guide'' in Journal of LaTeX \\& Testing (2023)" in rendered
+
+
+def test_render_template_with_only_achievements() -> None:
+    """Test rendering a template with only achievements (no publications)."""
+    # Test data with only achievements
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [],
+        "skills": [],
+        "achievements": [
+            {
+                "title": "Achievement Title",
+                "issuer": "Organization",
+                "date": "2023",
+            },
+        ],
+        "publications": [],
+    }
+
+    # Render the template
+    rendered = render_template(data)
+
+    # Check that the achievements section is present
+    assert "Achievements \\& Publications" in rendered
+    assert "Achievement Title at Organization (2023)" in rendered
+    assert "\\resumeItemListStart" in rendered
+    assert "\\resumeItemListEnd" in rendered
+
+
+def test_render_template_with_only_publications() -> None:
+    """Test rendering a template with only publications (no achievements)."""
+    # Test data with only publications
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [],
+        "skills": [],
+        "achievements": [],
+        "publications": [
+            {
+                "title": "Publication Title",
+                "journal": "Journal Name",
+                "date": "2023",
+            },
+        ],
+    }
+
+    # Render the template
+    rendered = render_template(data)
+
+    # Check that the publications section is present
+    assert "Achievements \\& Publications" in rendered
+    assert "``Publication Title'' in Journal Name (2023)" in rendered
+    assert "\\resumeItemListStart" in rendered
+    assert "\\resumeItemListEnd" in rendered

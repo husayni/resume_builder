@@ -1,0 +1,56 @@
+name: Test User
+contact:
+  phone: "+1 (123) 456-7890"
+  email: test.user@example.com
+  linkedin: testuser
+  github: testuser
+
+education:
+  - school: University Name
+    location: City, State
+    degree: Bachelor of Science in Computer Science
+    dates: "2018 - 2022"
+
+experience:
+  - company: Tech Company
+    role: Software Engineer
+    location: City, State
+    dates: "Jan 2022 - Present"
+    bullets:
+      - "Developed and maintained web applications using React and Node.js"
+      - "Implemented CI/CD pipelines using GitHub Actions"
+      - "Optimized database queries resulting in 30% performance improvement"
+
+projects:
+  - name: Personal Website
+    technologies: React, Next.js, Tailwind CSS
+    date: "2022"
+    bullets:
+      - "Designed and developed a personal portfolio website"
+      - "Implemented responsive design for mobile and desktop"
+
+skills:
+  - category: Languages
+    list:
+      - Python
+      - JavaScript
+      - Java
+      - SQL
+
+  - category: Frameworks
+    list:
+      - React
+      - Node.js
+      - Express
+      - Django
+
+# With achievements
+achievements:
+  - title: "Best Paper Award"
+    issuer: "Conference on Software Engineering"
+    date: "2023"
+
+publications:
+  - title: "Innovative Approaches to Software Testing"
+    journal: "Journal of Software Engineering"
+    date: "2023"
