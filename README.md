@@ -83,7 +83,7 @@ build_resume(
 
 ## YAML Format
 
-The YAML file should have the following structure:
+The YAML file should have the following structure. Any unknown fields will be ignored with a warning message:
 
 ```yaml
 name: Your Name
@@ -108,6 +108,8 @@ experience:
       - Accomplishment 2
 projects:
   - name: Project Name
+    technologies: Python, Flask, React, PostgreSQL, Docker
+    date: "June 2020 - Present"
     link: https://github.com/yourusername/project
     bullets:
       - Description 1

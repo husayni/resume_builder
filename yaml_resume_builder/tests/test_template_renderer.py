@@ -4,6 +4,7 @@ import os
 import tempfile
 
 import pytest
+from pytest import LogCaptureFixture
 
 from yaml_resume_builder.template_renderer import escape_latex, render_template
 
@@ -215,6 +216,178 @@ def test_render_template_with_projects() -> None:
         assert "Another Project" in rendered
         assert "Created a mobile app" in rendered
         assert "Used Flutter" in rendered
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(template_path):
+            os.unlink(template_path)
+
+
+def test_render_template_with_projects_technologies_and_dates() -> None:
+    """Test rendering a template with projects that have technologies and dates."""
+    # Create a temporary template file
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
+        temp_file.write(r"\documentclass{article}\begin{document}{{projects}}\end{document}")
+        template_path = temp_file.name
+
+    try:
+        # Test data with projects including technologies and dates
+        data = {
+            "name": "Test User",
+            "contact": {
+                "phone": "555-123-4567",
+                "email": "test@example.com",
+                "linkedin": "testuser",
+                "github": "testuser",
+            },
+            "education": [],
+            "experience": [],
+            "projects": [
+                {
+                    "name": "Gitlytics",
+                    "technologies": "Python, Flask, React, PostgreSQL, Docker",
+                    "date": "June 2020 - Present",
+                    "link": "https://github.com/testuser/gitlytics",
+                    "bullets": [
+                        "Developed a full-stack web application",
+                        "Implemented GitHub OAuth",
+                        "Visualized GitHub data to show collaboration",
+                    ],
+                },
+                {
+                    "name": "Simple Paintball",
+                    "technologies": "Spigot API, Java, Maven, TravisCI, Git",
+                    "date": "May 2018 - May 2020",
+                    "link": "",
+                    "bullets": [
+                        "Developed a Minecraft server plugin",
+                        "Published plugin gaining 2K+ downloads",
+                    ],
+                },
+                {
+                    "name": "Legacy Project",  # Test with missing technologies and date
+                    "link": "https://example.com",
+                    "bullets": [
+                        "Created a legacy project",
+                    ],
+                },
+            ],
+            "skills": [],
+        }
+
+        # Render the template
+        rendered = render_template(template_path, data)
+
+        # Check that the projects data is correctly inserted
+        assert "Gitlytics" in rendered
+        assert "Python, Flask, React, PostgreSQL, Docker" in rendered
+        assert "June 2020 - Present" in rendered
+        assert "Developed a full-stack web application" in rendered
+
+        assert "Simple Paintball" in rendered
+        assert "Spigot API, Java, Maven, TravisCI, Git" in rendered
+        assert "May 2018 - May 2020" in rendered
+        assert "Developed a Minecraft server plugin" in rendered
+
+        # Check that legacy project without technologies and date still works
+        assert "Legacy Project" in rendered
+        assert "https://example.com" in rendered
+        assert "Created a legacy project" in rendered
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(template_path):
+            os.unlink(template_path)
+
+
+def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
+    """Test rendering a template with extra fields in the YAML data."""
+    import logging
+
+    caplog.set_level(logging.WARNING)
+
+    # Create a temporary template file
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
+        temp_file.write(r"\documentclass{article}\begin{document}{{name}}\end{document}")
+        template_path = temp_file.name
+
+    try:
+        # Test data with extra fields at various levels
+        data = {
+            "name": "Test User",
+            "title": "Software Engineer",  # Extra field at root level
+            "contact": {
+                "phone": "555-123-4567",
+                "email": "test@example.com",
+                "linkedin": "testuser",
+                "github": "testuser",
+                "website": "https://example.com",  # Extra field in contact
+                "twitter": "@testuser",  # Extra field in contact
+            },
+            "education": [
+                {
+                    "school": "Test University",
+                    "location": "Test City, TX",
+                    "degree": "Bachelor of Science in Computer Science",
+                    "dates": "2020 - 2024",
+                    "gpa": "3.9/4.0",  # Extra field in education
+                    "honors": ["Dean's List", "Scholarship"],  # Extra field in education
+                }
+            ],
+            "experience": [
+                {
+                    "company": "Test Company",
+                    "role": "Software Engineer",
+                    "location": "Test City, CA",
+                    "dates": "2020 - Present",
+                    "bullets": ["Developed feature X"],
+                    "manager": "John Doe",  # Extra field in experience
+                    "team_size": 5,  # Extra field in experience
+                }
+            ],
+            "projects": [
+                {
+                    "name": "Test Project",
+                    "technologies": "Python, Django",
+                    "date": "2023",
+                    "link": "https://github.com/testuser/test-project",
+                    "bullets": ["Built a web application"],
+                    "status": "Completed",  # Extra field in project
+                    "collaborators": ["Jane Doe"],  # Extra field in project
+                }
+            ],
+            "skills": [
+                {
+                    "category": "Languages",
+                    "list": ["Python", "JavaScript"],
+                    "proficiency": ["Expert", "Intermediate"],  # Extra field in skills
+                }
+            ],
+            "certifications": [  # Extra section
+                {
+                    "name": "AWS Certified Developer",
+                    "date": "2023",
+                    "issuer": "Amazon Web Services",
+                }
+            ],
+        }
+
+        # Render the template
+        rendered = render_template(template_path, data)
+
+        # Check that the template is rendered correctly with the known fields
+        assert "Test User" in rendered
+
+        # Check that warnings were logged for extra fields
+        assert "Unknown field 'title' at root level" in caplog.text
+        assert "Unknown field 'certifications' at root level" in caplog.text
+        assert "Unknown field 'website' in contact section" in caplog.text
+        assert "Unknown field 'twitter' in contact section" in caplog.text
+        assert "Unknown field 'gpa' in education entry" in caplog.text
+        assert "Unknown field 'honors' in education entry" in caplog.text
+        assert "Unknown field 'manager' in experience entry" in caplog.text
+        assert "Unknown field 'team_size' in experience entry" in caplog.text
+        assert "Unknown field 'status' in project entry" in caplog.text
+        assert "Unknown field 'collaborators' in project entry" in caplog.text
+        assert "Unknown field 'proficiency' in skills entry" in caplog.text
     finally:
         # Clean up the temporary file
         if os.path.exists(template_path):
