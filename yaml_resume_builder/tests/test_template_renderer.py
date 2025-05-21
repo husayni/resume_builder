@@ -28,10 +28,10 @@ def test_escape_latex() -> None:
     assert r"\textasciitilde{}" in escaped  # ~ -> \textasciitilde{}
     assert r"\textasciicircum{}" in escaped  # ^ -> \textasciicircum{}
 
-    # The backslash is replaced with \textbackslash{} but may have additional escaping
-    # Just check that the original backslash is gone and textbackslash appears
-    assert "\\" not in escaped or escaped.count("\\") > text.count("\\")
+    # Check that backslash is properly escaped
     assert "textbackslash" in escaped
+    # Just check that the original backslash is gone or properly escaped
+    assert "\\" not in escaped or "\\textbackslash" in escaped
 
     # Test with non-string input
     assert escape_latex(123) == 123

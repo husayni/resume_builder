@@ -4,6 +4,7 @@ This module contains the main functionality for building resumes from YAML files
 """
 
 import os
+import shutil
 import subprocess
 import tempfile
 from typing import Any, Dict, Optional
@@ -68,7 +69,6 @@ def compile_latex(tex_path: str, output_dir: str) -> str:
             "- macOS: brew install --cask mactex\n"
             "- Windows: Install MiKTeX from https://miktex.org/download"
         )
-        print(error_msg)
         raise FileNotFoundError(error_msg)
 
     # Run latexmk to compile the LaTeX file
@@ -78,7 +78,7 @@ def compile_latex(tex_path: str, output_dir: str) -> str:
                 "latexmk",
                 "-pdf",
                 "-interaction=nonstopmode",
-                "-output-directory=" + output_dir,
+                f"-output-directory={output_dir}",
                 tex_path,
             ],
             check=True,
@@ -88,9 +88,10 @@ def compile_latex(tex_path: str, output_dir: str) -> str:
         # Return the path to the generated PDF
         return os.path.join(output_dir, f"{filename}.pdf")
     except subprocess.CalledProcessError as e:
-        print(f"LaTeX compilation error: {e}")
-        print(f"stdout: {e.stdout.decode('utf-8')}")
-        print(f"stderr: {e.stderr.decode('utf-8')}")
+        # Add stdout and stderr to the exception message for better error reporting
+        e.args = (
+            f"LaTeX compilation error: {e}\nstdout: {e.stdout.decode('utf-8')}\nstderr: {e.stderr.decode('utf-8')}",
+        )
         raise
 
 
@@ -143,7 +144,6 @@ def build_resume(input_path: str, output_path: str, template_path: Optional[str]
                 f.write("Mock PDF content")
         else:
             # Copy the PDF to the output path
-            with open(pdf_path, "rb") as src, open(output_path, "wb") as dst:
-                dst.write(src.read())
+            shutil.copy(pdf_path, output_path)
 
     return output_path

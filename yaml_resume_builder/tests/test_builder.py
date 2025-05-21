@@ -280,7 +280,18 @@ def test_build_resume_with_real_pdf(
 
     # Create temporary files for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
-        yaml_file.write("name: Test User\nage: 30")
+        yaml_file.write("""
+name: Test User
+contact:
+  phone: 555-123-4567
+  email: test@example.com
+  linkedin: testuser
+  github: testuser
+education: []
+experience: []
+projects: []
+skills: []
+""")
         yaml_path = yaml_file.name
         output_path = os.path.join(tempfile.gettempdir(), "output.pdf")
 
@@ -311,38 +322,70 @@ def test_build_resume_with_real_pdf(
             os.unlink(yaml_path)
 
 
-def test_build_resume_create_output_dir() -> None:
-    """Simplified test that doesn't use mocks to avoid hanging."""
-    print("Starting simplified test")
+@patch("yaml_resume_builder.builder.compile_latex")
+@patch("yaml_resume_builder.builder.render_template")
+def test_build_resume_create_output_dir(
+    mock_render_template: MagicMock, mock_compile_latex: MagicMock
+) -> None:
+    """Test that build_resume creates the output directory if it doesn't exist."""
+    # Mock the render_template function
+    mock_render_template.return_value = (
+        "\\documentclass{article}\\begin{document}Test\\end{document}"
+    )
+
+    # Mock the compile_latex function to return a PDF path
+    pdf_path = os.path.join(tempfile.gettempdir(), "test.pdf")
+    mock_compile_latex.return_value = pdf_path
 
     # Create temporary files for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
-        yaml_file.write("name: Test User\nage: 30")
+        yaml_file.write("""
+name: Test User
+contact:
+  phone: 555-123-4567
+  email: test@example.com
+  linkedin: testuser
+  github: testuser
+education: []
+experience: []
+projects: []
+skills: []
+""")
         yaml_path = yaml_file.name
-        print(f"Created YAML file at {yaml_path}")
 
     try:
         # Create a temporary directory for output
         temp_dir = tempfile.mkdtemp()
-        output_path = os.path.join(temp_dir, "resume.pdf")
-        print(f"Output path: {output_path}")
+        # Create a non-existent subdirectory
+        output_dir = os.path.join(temp_dir, "subdir")
+        output_path = os.path.join(output_dir, "resume.pdf")
 
-        # Skip the actual test since it's hanging
-        print("Test would call build_resume here, but skipping to avoid hanging")
-        # result = build_resume(yaml_path, output_path)
+        # Create a mock PDF file
+        with open(pdf_path, "w") as f:
+            f.write("Mock PDF content")
 
-        # Just assert something trivial to pass the test
-        assert os.path.exists(yaml_path)
-        print("Test completed successfully")
+        # Call build_resume
+        result = build_resume(yaml_path, output_path)
+
+        # Check that the output directory was created
+        assert os.path.exists(output_dir)
+        # Check that the output file was created
+        assert os.path.exists(output_path)
+        # Check that the returned path is correct
+        assert result == output_path
+
+        # Clean up the mock PDF
+        if os.path.exists(pdf_path):
+            os.unlink(pdf_path)
     finally:
         # Clean up the temporary file
         if os.path.exists(yaml_path):
             os.unlink(yaml_path)
-            print(f"Cleaned up {yaml_path}")
         # Clean up the temporary directory
         if os.path.exists(temp_dir):
-            os.rmdir(temp_dir)
-            print(f"Cleaned up {temp_dir}")
+            import shutil
+
+            shutil.rmtree(temp_dir)
 
 
 def test_build_resume_input_not_found() -> None:
