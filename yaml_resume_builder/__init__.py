@@ -10,5 +10,5 @@ from yaml_resume_builder.builder import build_resume
 # Configure logging format for all loggers in the package
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
 
-__version__ = "1.0.3"
+__version__ = "1.0.4"
 __all__ = ["build_resume"]

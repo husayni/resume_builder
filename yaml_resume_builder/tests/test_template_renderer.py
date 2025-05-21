@@ -389,7 +389,7 @@ def test_render_template_with_nonexistent_template() -> None:
     }
 
     # Render the template
-    # This should work because the function uses the built-in simple_template.tex
+    # This should work because the function uses the built-in resume.tex.template
     rendered = render_template(data)
 
     # Check that the data is correctly inserted

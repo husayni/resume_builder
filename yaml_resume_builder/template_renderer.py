@@ -242,9 +242,8 @@ def _build_skills_section(data: Dict[str, Any]) -> str:
     Returns:
         str: The formatted skills section.
     """
-    skills_section = ""
-    for skill in data["skills"]:
-        skills_section += (
+    return "".join(
+        (
             r"\textbf{"
             + escape_latex(skill["category"])
             + r"}{: "
@@ -252,7 +251,8 @@ def _build_skills_section(data: Dict[str, Any]) -> str:
             + r"} \\"
             + "\n"
         )
-    return skills_section
+        for skill in data["skills"]
+    )
 
 
 def _format_achievement(achievement: Dict[str, Any]) -> str:
@@ -309,16 +309,25 @@ def _build_achievements_publications_section(data: Dict[str, Any]) -> str:
 
     Returns:
         str: The formatted achievements and publications section.
+        Returns an empty string if both achievements and publications are empty.
     """
+    # Check if both achievements and publications are empty
+    has_achievements = "achievements" in data and data["achievements"]
+    has_publications = "publications" in data and data["publications"]
+
+    # If both are empty, return an empty string
+    if not has_achievements and not has_publications:
+        return ""
+
     section = r"\resumeItemListStart" + "\n"
 
     # Add achievements if available
-    if "achievements" in data and data["achievements"]:
+    if has_achievements:
         for achievement in data["achievements"]:
             section += _format_achievement(achievement)
 
     # Add publications if available
-    if "publications" in data and data["publications"]:
+    if has_publications:
         for publication in data["publications"]:
             section += _format_publication(publication)
 
@@ -342,9 +351,9 @@ def render_template(data: Dict[str, Any]) -> str:
     # Validate the data structure and warn about unknown fields
     validate_data(data)
 
-    # Use our simple template instead
-    simple_template_path = os.path.join(os.path.dirname(__file__), "simple_template.tex")
-    with open(simple_template_path, "r") as file:
+    # Use our resume template
+    resume_template_path = os.path.join(os.path.dirname(__file__), "resume.tex.template")
+    with open(resume_template_path, "r") as file:
         template_content = file.read()
 
     # Replace name
@@ -365,8 +374,28 @@ def render_template(data: Dict[str, Any]) -> str:
     template_content = template_content.replace("{{experience}}", _build_experience_section(data))
     template_content = template_content.replace("{{projects}}", _build_projects_section(data))
     template_content = template_content.replace("{{skills}}", _build_skills_section(data))
-    template_content = template_content.replace(
-        "{{achievements_publications}}", _build_achievements_publications_section(data)
-    )
+
+    # Build achievements and publications section
+    achievements_publications_content = _build_achievements_publications_section(data)
+
+    # If the section is empty, remove the entire section from the template
+    if not achievements_publications_content:
+        # Remove the section from the template using string replacement
+        # Find the section in the template
+        section_start = "%-----------Achievements / Publications / Certifications-----------"
+        section_end = "%-------------------------------------------"
+
+        # Find the start and end positions of the section
+        start_pos = template_content.find(section_start)
+        end_pos = template_content.find(section_end, start_pos) + len(section_end)
+
+        if start_pos != -1 and end_pos != -1:
+            # Remove the section
+            template_content = template_content[:start_pos] + template_content[end_pos + 1 :]
+    else:
+        # Otherwise, replace the placeholder with the content
+        template_content = template_content.replace(
+            "{{achievements_publications}}", achievements_publications_content
+        )
 
     return template_content
