@@ -145,5 +145,4 @@ def build_resume(input_path: str, output_path: str, template_path: Optional[str]
         else:
             # Copy the PDF to the output path
             shutil.copy(pdf_path, output_path)
-
     return output_path
