@@ -1,6 +1,6 @@
 # YAML Resume Builder
 
-A Python package to generate PDF resumes from YAML files using LaTeX templates.
+A Python package that generates professional PDF resumes from YAML files using Jake's LaTeX template. Define your resume content in simple YAML format and convert it to a polished, ATS-friendly PDF with a single command.
 
 [![CI](https://github.com/husayni/resume_builder/actions/workflows/ci.yml/badge.svg)](https://github.com/husayni/resume_builder/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/husayni/resume_builder/branch/main/graph/badge.svg)](https://codecov.io/gh/husayni/resume_builder)
