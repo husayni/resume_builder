@@ -121,11 +121,10 @@ def validate_data(data: Dict[str, Any]) -> None:
         validate_list_entries(data["skills"], KNOWN_SKILLS_FIELDS, "skills")
 
 
-def render_template(template_path: str, data: Dict[str, Any]) -> str:
+def render_template(data: Dict[str, Any]) -> str:
     """Render a LaTeX template with the given data.
 
     Args:
-        template_path (str): Path to the LaTeX template (not used).
         data (dict): Data to render the template with.
 
     Returns:

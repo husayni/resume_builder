@@ -16,56 +16,12 @@ def test_build_command(mock_build_resume: MagicMock) -> None:
     mock_build_resume.return_value = "output.pdf"
 
     # Create temporary files for testing
-    # Using nested context managers for Python 3.8 compatibility
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as template_file:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
-                # Write test data to the files
-                yaml_file.write("name: Test User\nage: 30")
-                template_file.write(
-                    "\\documentclass{article}\\begin{document}{{name}}\\end{document}"
-                )
-
-                # Get the file paths
-                yaml_path = yaml_file.name
-                template_path = template_file.name
-                output_path = output_file.name
-
-    try:
-        # Create a CLI runner
-        runner = CliRunner()
-
-        # Run the build command
-        result = runner.invoke(
-            cli,
-            ["build", "--input", yaml_path, "--output", output_path, "--template", template_path],
-        )
-
-        # Check that the command succeeded
-        assert result.exit_code == 0
-
-        # Check that the build_resume function was called with the correct arguments
-        mock_build_resume.assert_called_once_with(yaml_path, output_path, template_path)
-
-        # Check that the success message is in the output
-        assert "Resume successfully built and saved to: output.pdf" in result.output
-    finally:
-        # Clean up the temporary files
-        for path in [yaml_path, template_path, output_path]:
-            if os.path.exists(path):
-                os.unlink(path)
-
-
-@patch("yaml_resume_builder.cli.build_resume")
-def test_build_command_without_template(mock_build_resume: MagicMock) -> None:
-    """Test the build command without specifying a template."""
-    # Mock the build_resume function
-    mock_build_resume.return_value = "output.pdf"
-
-    # Create temporary files for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
         with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
+            # Write test data to the files
             yaml_file.write("name: Test User\nage: 30")
+
+            # Get the file paths
             yaml_path = yaml_file.name
             output_path = output_file.name
 
@@ -73,7 +29,7 @@ def test_build_command_without_template(mock_build_resume: MagicMock) -> None:
         # Create a CLI runner
         runner = CliRunner()
 
-        # Run the build command without template
+        # Run the build command
         result = runner.invoke(
             cli,
             ["build", "--input", yaml_path, "--output", output_path],
@@ -83,7 +39,7 @@ def test_build_command_without_template(mock_build_resume: MagicMock) -> None:
         assert result.exit_code == 0
 
         # Check that the build_resume function was called with the correct arguments
-        mock_build_resume.assert_called_once_with(yaml_path, output_path, None)
+        mock_build_resume.assert_called_once_with(yaml_path, output_path)
 
         # Check that the success message is in the output
         assert "Resume successfully built and saved to: output.pdf" in result.output
@@ -101,20 +57,14 @@ def test_build_command_error(mock_build_resume: MagicMock) -> None:
     mock_build_resume.side_effect = Exception("Test error")
 
     # Create temporary files for testing
-    # Using nested context managers for Python 3.8 compatibility
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as template_file:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
-                # Write test data to the files
-                yaml_file.write("name: Test User\nage: 30")
-                template_file.write(
-                    "\\documentclass{article}\\begin{document}{{name}}\\end{document}"
-                )
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
+            # Write test data to the files
+            yaml_file.write("name: Test User\nage: 30")
 
-                # Get the file paths
-                yaml_path = yaml_file.name
-                template_path = template_file.name
-                output_path = output_file.name
+            # Get the file paths
+            yaml_path = yaml_file.name
+            output_path = output_file.name
 
     try:
         # Create a CLI runner
@@ -123,7 +73,7 @@ def test_build_command_error(mock_build_resume: MagicMock) -> None:
         # Run the build command
         result = runner.invoke(
             cli,
-            ["build", "--input", yaml_path, "--output", output_path, "--template", template_path],
+            ["build", "--input", yaml_path, "--output", output_path],
         )
 
         # Check that the command failed
@@ -133,7 +83,7 @@ def test_build_command_error(mock_build_resume: MagicMock) -> None:
         assert "Error building resume: Test error" in result.output
     finally:
         # Clean up the temporary files
-        for path in [yaml_path, template_path, output_path]:
+        for path in [yaml_path, output_path]:
             if os.path.exists(path):
                 os.unlink(path)
 
@@ -263,7 +213,6 @@ def test_build_help() -> None:
     assert "Build a resume from a YAML file" in result.output
     assert "--input" in result.output
     assert "--output" in result.output
-    assert "--template" in result.output
 
 
 def test_init_help() -> None:

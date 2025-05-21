@@ -1,8 +1,5 @@
 """Tests for the template_renderer module."""
 
-import os
-import tempfile
-
 import pytest
 from pytest import LogCaptureFixture
 
@@ -43,259 +40,203 @@ def test_escape_latex() -> None:
 
 def test_render_template() -> None:
     """Test rendering a LaTeX template with data."""
-    # Create a temporary template file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
-        temp_file.write(r"""
-\documentclass{article}
-\begin{document}
-\textbf{\Huge \scshape Jake Ryan}
+    # Test data
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [
+            {
+                "school": "Test University",
+                "location": "Test City, TX",
+                "degree": "Bachelor of Science in Computer Science",
+                "dates": "2020 - 2024",
+            }
+        ],
+        "experience": [],
+        "projects": [],
+        "skills": [],
+    }
 
-123-456-7890 $|$ \href{mailto:x@x.com}{\underline{jake@su.edu}} $|$
-\href{https://linkedin.com/in/...}{\underline{linkedin.com/in/jake}} $|$
-\href{https://github.com/...}{\underline{github.com/jake}}
+    # Render the template
+    rendered = render_template(data)
 
-\section{Education}
-  \resumeSubHeadingListStart
-    \resumeSubheading
-      {Southwestern University}{Georgetown, TX}
-      {Bachelor of Arts in Computer Science, Minor in Business}{Aug. 2018 -- May 2021}
-  \resumeSubHeadingListEnd
-\end{document}
-""")
-        template_path = temp_file.name
+    # Check that the rendered template is a string
+    assert isinstance(rendered, str)
 
-    try:
-        # Test data
-        data = {
-            "name": "Test User",
-            "contact": {
-                "phone": "555-123-4567",
-                "email": "test@example.com",
-                "linkedin": "testuser",
-                "github": "testuser",
-            },
-            "education": [
-                {
-                    "school": "Test University",
-                    "location": "Test City, TX",
-                    "degree": "Bachelor of Science in Computer Science",
-                    "dates": "2020 - 2024",
-                }
-            ],
-            "experience": [],
-            "projects": [],
-            "skills": [],
-        }
-
-        # Render the template
-        rendered = render_template(template_path, data)
-
-        # Check that the rendered template is a string
-        assert isinstance(rendered, str)
-
-        # Check that the data is correctly inserted
-        assert "Test User" in rendered
-        assert "555-123-4567" in rendered
-        assert "test@example.com" in rendered
-        assert "testuser" in rendered
-        assert "Test University" in rendered
-        assert "Test City, TX" in rendered
-        assert "Bachelor of Science in Computer Science" in rendered
-        assert "2020 - 2024" in rendered
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(template_path):
-            os.unlink(template_path)
+    # Check that the data is correctly inserted
+    assert "Test User" in rendered
+    assert "555-123-4567" in rendered
+    assert "test@example.com" in rendered
+    assert "testuser" in rendered
+    assert "Test University" in rendered
+    assert "Test City, TX" in rendered
+    assert "Bachelor of Science in Computer Science" in rendered
+    assert "2020 - 2024" in rendered
 
 
 def test_render_template_with_experience() -> None:
     """Test rendering a template with experience data."""
-    # Create a temporary template file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
-        temp_file.write(r"\documentclass{article}\begin{document}{{experience}}\end{document}")
-        template_path = temp_file.name
+    # Test data with experience
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [
+            {
+                "company": "Test Company",
+                "role": "Software Engineer",
+                "location": "Test City, CA",
+                "dates": "2020 - Present",
+                "bullets": [
+                    "Developed feature X",
+                    "Implemented system Y",
+                    "Improved performance by Z%",
+                ],
+            }
+        ],
+        "projects": [],
+        "skills": [],
+    }
 
-    try:
-        # Test data with experience
-        data = {
-            "name": "Test User",
-            "contact": {
-                "phone": "555-123-4567",
-                "email": "test@example.com",
-                "linkedin": "testuser",
-                "github": "testuser",
-            },
-            "education": [],
-            "experience": [
-                {
-                    "company": "Test Company",
-                    "role": "Software Engineer",
-                    "location": "Test City, CA",
-                    "dates": "2020 - Present",
-                    "bullets": [
-                        "Developed feature X",
-                        "Implemented system Y",
-                        "Improved performance by Z%",
-                    ],
-                }
-            ],
-            "projects": [],
-            "skills": [],
-        }
+    # Render the template
+    rendered = render_template(data)
 
-        # Render the template
-        rendered = render_template(template_path, data)
+    # Check that the experience data is correctly inserted
+    assert "Test Company" in rendered
+    assert "Software Engineer" in rendered
+    assert "Test City, CA" in rendered
+    assert "2020 - Present" in rendered
+    assert "Developed feature X" in rendered
+    assert "Implemented system Y" in rendered
 
-        # Check that the experience data is correctly inserted
-        assert "Test Company" in rendered
-        assert "Software Engineer" in rendered
-        assert "Test City, CA" in rendered
-        assert "2020 - Present" in rendered
-        assert "Developed feature X" in rendered
-        assert "Implemented system Y" in rendered
-
-        # The % character is escaped in LaTeX, so we need to check for Z\%
-        assert "Improved performance by Z\\%" in rendered
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(template_path):
-            os.unlink(template_path)
+    # The % character is escaped in LaTeX, so we need to check for Z\%
+    assert "Improved performance by Z\\%" in rendered
 
 
 def test_render_template_with_projects() -> None:
     """Test rendering a template with projects data."""
-    # Create a temporary template file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
-        temp_file.write(r"\documentclass{article}\begin{document}{{projects}}\end{document}")
-        template_path = temp_file.name
-
-    try:
-        # Test data with projects
-        data = {
-            "name": "Test User",
-            "contact": {
-                "phone": "555-123-4567",
-                "email": "test@example.com",
-                "linkedin": "testuser",
-                "github": "testuser",
+    # Test data with projects
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [
+            {
+                "name": "Test Project",
+                "link": "https://github.com/testuser/test-project",
+                "bullets": [
+                    "Built a web application",
+                    "Used React and Node.js",
+                    "Implemented CI/CD pipeline",
+                ],
             },
-            "education": [],
-            "experience": [],
-            "projects": [
-                {
-                    "name": "Test Project",
-                    "link": "https://github.com/testuser/test-project",
-                    "bullets": [
-                        "Built a web application",
-                        "Used React and Node.js",
-                        "Implemented CI/CD pipeline",
-                    ],
-                },
-                {
-                    "name": "Another Project",
-                    "link": "",  # Test with empty link
-                    "bullets": [
-                        "Created a mobile app",
-                        "Used Flutter",
-                    ],
-                },
-            ],
-            "skills": [],
-        }
+            {
+                "name": "Another Project",
+                "link": "",  # Test with empty link
+                "bullets": [
+                    "Created a mobile app",
+                    "Used Flutter",
+                ],
+            },
+        ],
+        "skills": [],
+    }
 
-        # Render the template
-        rendered = render_template(template_path, data)
+    # Render the template
+    rendered = render_template(data)
 
-        # Check that the projects data is correctly inserted
-        assert "Test Project" in rendered
-        assert "https://github.com/testuser/test-project" in rendered
-        assert "Built a web application" in rendered
-        assert "Used React and Node.js" in rendered
-        assert "Implemented CI/CD pipeline" in rendered
+    # Check that the projects data is correctly inserted
+    assert "Test Project" in rendered
+    assert "https://github.com/testuser/test-project" in rendered
+    assert "Built a web application" in rendered
+    assert "Used React and Node.js" in rendered
+    assert "Implemented CI/CD pipeline" in rendered
 
-        assert "Another Project" in rendered
-        assert "Created a mobile app" in rendered
-        assert "Used Flutter" in rendered
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(template_path):
-            os.unlink(template_path)
+    assert "Another Project" in rendered
+    assert "Created a mobile app" in rendered
+    assert "Used Flutter" in rendered
 
 
 def test_render_template_with_projects_technologies_and_dates() -> None:
     """Test rendering a template with projects that have technologies and dates."""
-    # Create a temporary template file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
-        temp_file.write(r"\documentclass{article}\begin{document}{{projects}}\end{document}")
-        template_path = temp_file.name
-
-    try:
-        # Test data with projects including technologies and dates
-        data = {
-            "name": "Test User",
-            "contact": {
-                "phone": "555-123-4567",
-                "email": "test@example.com",
-                "linkedin": "testuser",
-                "github": "testuser",
+    # Test data with projects including technologies and dates
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [
+            {
+                "name": "Gitlytics",
+                "technologies": "Python, Flask, React, PostgreSQL, Docker",
+                "date": "June 2020 - Present",
+                "link": "https://github.com/testuser/gitlytics",
+                "bullets": [
+                    "Developed a full-stack web application",
+                    "Implemented GitHub OAuth",
+                    "Visualized GitHub data to show collaboration",
+                ],
             },
-            "education": [],
-            "experience": [],
-            "projects": [
-                {
-                    "name": "Gitlytics",
-                    "technologies": "Python, Flask, React, PostgreSQL, Docker",
-                    "date": "June 2020 - Present",
-                    "link": "https://github.com/testuser/gitlytics",
-                    "bullets": [
-                        "Developed a full-stack web application",
-                        "Implemented GitHub OAuth",
-                        "Visualized GitHub data to show collaboration",
-                    ],
-                },
-                {
-                    "name": "Simple Paintball",
-                    "technologies": "Spigot API, Java, Maven, TravisCI, Git",
-                    "date": "May 2018 - May 2020",
-                    "link": "",
-                    "bullets": [
-                        "Developed a Minecraft server plugin",
-                        "Published plugin gaining 2K+ downloads",
-                    ],
-                },
-                {
-                    "name": "Legacy Project",  # Test with missing technologies and date
-                    "link": "https://example.com",
-                    "bullets": [
-                        "Created a legacy project",
-                    ],
-                },
-            ],
-            "skills": [],
-        }
+            {
+                "name": "Simple Paintball",
+                "technologies": "Spigot API, Java, Maven, TravisCI, Git",
+                "date": "May 2018 - May 2020",
+                "link": "",
+                "bullets": [
+                    "Developed a Minecraft server plugin",
+                    "Published plugin gaining 2K+ downloads",
+                ],
+            },
+            {
+                "name": "Legacy Project",  # Test with missing technologies and date
+                "link": "https://example.com",
+                "bullets": [
+                    "Created a legacy project",
+                ],
+            },
+        ],
+        "skills": [],
+    }
 
-        # Render the template
-        rendered = render_template(template_path, data)
+    # Render the template
+    rendered = render_template(data)
 
-        # Check that the projects data is correctly inserted
-        assert "Gitlytics" in rendered
-        assert "Python, Flask, React, PostgreSQL, Docker" in rendered
-        assert "June 2020 - Present" in rendered
-        assert "Developed a full-stack web application" in rendered
+    # Check that the projects data is correctly inserted
+    assert "Gitlytics" in rendered
+    assert "Python, Flask, React, PostgreSQL, Docker" in rendered
+    assert "June 2020 - Present" in rendered
+    assert "Developed a full-stack web application" in rendered
 
-        assert "Simple Paintball" in rendered
-        assert "Spigot API, Java, Maven, TravisCI, Git" in rendered
-        assert "May 2018 - May 2020" in rendered
-        assert "Developed a Minecraft server plugin" in rendered
+    assert "Simple Paintball" in rendered
+    assert "Spigot API, Java, Maven, TravisCI, Git" in rendered
+    assert "May 2018 - May 2020" in rendered
+    assert "Developed a Minecraft server plugin" in rendered
 
-        # Check that legacy project without technologies and date still works
-        assert "Legacy Project" in rendered
-        assert "https://example.com" in rendered
-        assert "Created a legacy project" in rendered
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(template_path):
-            os.unlink(template_path)
+    # Check that legacy project without technologies and date still works
+    assert "Legacy Project" in rendered
+    assert "https://example.com" in rendered
+    assert "Created a legacy project" in rendered
 
 
 def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
@@ -304,160 +245,130 @@ def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
 
     caplog.set_level(logging.WARNING)
 
-    # Create a temporary template file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
-        temp_file.write(r"\documentclass{article}\begin{document}{{name}}\end{document}")
-        template_path = temp_file.name
+    # Test data with extra fields at various levels
+    data = {
+        "name": "Test User",
+        "title": "Software Engineer",  # Extra field at root level
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+            "website": "https://example.com",  # Extra field in contact
+            "twitter": "@testuser",  # Extra field in contact
+        },
+        "education": [
+            {
+                "school": "Test University",
+                "location": "Test City, TX",
+                "degree": "Bachelor of Science in Computer Science",
+                "dates": "2020 - 2024",
+                "gpa": "3.9/4.0",  # Extra field in education
+                "honors": ["Dean's List", "Scholarship"],  # Extra field in education
+            }
+        ],
+        "experience": [
+            {
+                "company": "Test Company",
+                "role": "Software Engineer",
+                "location": "Test City, CA",
+                "dates": "2020 - Present",
+                "bullets": ["Developed feature X"],
+                "manager": "John Doe",  # Extra field in experience
+                "team_size": 5,  # Extra field in experience
+            }
+        ],
+        "projects": [
+            {
+                "name": "Test Project",
+                "technologies": "Python, Django",
+                "date": "2023",
+                "link": "https://github.com/testuser/test-project",
+                "bullets": ["Built a web application"],
+                "status": "Completed",  # Extra field in project
+                "collaborators": ["Jane Doe"],  # Extra field in project
+            }
+        ],
+        "skills": [
+            {
+                "category": "Languages",
+                "list": ["Python", "JavaScript"],
+                "proficiency": ["Expert", "Intermediate"],  # Extra field in skills
+            }
+        ],
+        "certifications": [  # Extra section
+            {
+                "name": "AWS Certified Developer",
+                "date": "2023",
+                "issuer": "Amazon Web Services",
+            }
+        ],
+    }
 
-    try:
-        # Test data with extra fields at various levels
-        data = {
-            "name": "Test User",
-            "title": "Software Engineer",  # Extra field at root level
-            "contact": {
-                "phone": "555-123-4567",
-                "email": "test@example.com",
-                "linkedin": "testuser",
-                "github": "testuser",
-                "website": "https://example.com",  # Extra field in contact
-                "twitter": "@testuser",  # Extra field in contact
-            },
-            "education": [
-                {
-                    "school": "Test University",
-                    "location": "Test City, TX",
-                    "degree": "Bachelor of Science in Computer Science",
-                    "dates": "2020 - 2024",
-                    "gpa": "3.9/4.0",  # Extra field in education
-                    "honors": ["Dean's List", "Scholarship"],  # Extra field in education
-                }
-            ],
-            "experience": [
-                {
-                    "company": "Test Company",
-                    "role": "Software Engineer",
-                    "location": "Test City, CA",
-                    "dates": "2020 - Present",
-                    "bullets": ["Developed feature X"],
-                    "manager": "John Doe",  # Extra field in experience
-                    "team_size": 5,  # Extra field in experience
-                }
-            ],
-            "projects": [
-                {
-                    "name": "Test Project",
-                    "technologies": "Python, Django",
-                    "date": "2023",
-                    "link": "https://github.com/testuser/test-project",
-                    "bullets": ["Built a web application"],
-                    "status": "Completed",  # Extra field in project
-                    "collaborators": ["Jane Doe"],  # Extra field in project
-                }
-            ],
-            "skills": [
-                {
-                    "category": "Languages",
-                    "list": ["Python", "JavaScript"],
-                    "proficiency": ["Expert", "Intermediate"],  # Extra field in skills
-                }
-            ],
-            "certifications": [  # Extra section
-                {
-                    "name": "AWS Certified Developer",
-                    "date": "2023",
-                    "issuer": "Amazon Web Services",
-                }
-            ],
-        }
+    # Render the template
+    rendered = render_template(data)
 
-        # Render the template
-        rendered = render_template(template_path, data)
+    # Check that the template is rendered correctly with the known fields
+    assert "Test User" in rendered
 
-        # Check that the template is rendered correctly with the known fields
-        assert "Test User" in rendered
-
-        # Check that warnings were logged for extra fields
-        assert "Unknown field 'title' at root level" in caplog.text
-        assert "Unknown field 'certifications' at root level" in caplog.text
-        assert "Unknown field 'website' in contact section" in caplog.text
-        assert "Unknown field 'twitter' in contact section" in caplog.text
-        assert "Unknown field 'gpa' in education entry" in caplog.text
-        assert "Unknown field 'honors' in education entry" in caplog.text
-        assert "Unknown field 'manager' in experience entry" in caplog.text
-        assert "Unknown field 'team_size' in experience entry" in caplog.text
-        assert "Unknown field 'status' in project entry" in caplog.text
-        assert "Unknown field 'collaborators' in project entry" in caplog.text
-        assert "Unknown field 'proficiency' in skills entry" in caplog.text
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(template_path):
-            os.unlink(template_path)
+    # Check that warnings were logged for extra fields
+    assert "Unknown field 'title' at root level" in caplog.text
+    assert "Unknown field 'certifications' at root level" in caplog.text
+    assert "Unknown field 'website' in contact section" in caplog.text
+    assert "Unknown field 'twitter' in contact section" in caplog.text
+    assert "Unknown field 'gpa' in education entry" in caplog.text
+    assert "Unknown field 'honors' in education entry" in caplog.text
+    assert "Unknown field 'manager' in experience entry" in caplog.text
+    assert "Unknown field 'team_size' in experience entry" in caplog.text
+    assert "Unknown field 'status' in project entry" in caplog.text
+    assert "Unknown field 'collaborators' in project entry" in caplog.text
+    assert "Unknown field 'proficiency' in skills entry" in caplog.text
 
 
 def test_render_template_with_skills() -> None:
     """Test rendering a template with skills data."""
-    # Create a temporary template file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
-        temp_file.write(r"\documentclass{article}\begin{document}{{skills}}\end{document}")
-        template_path = temp_file.name
-
-    try:
-        # Test data with skills
-        data = {
-            "name": "Test User",
-            "contact": {
-                "phone": "555-123-4567",
-                "email": "test@example.com",
-                "linkedin": "testuser",
-                "github": "testuser",
+    # Test data with skills
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [],
+        "skills": [
+            {
+                "category": "Languages",
+                "list": ["Python", "JavaScript", "Java"],
             },
-            "education": [],
-            "experience": [],
-            "projects": [],
-            "skills": [
-                {
-                    "category": "Languages",
-                    "list": ["Python", "JavaScript", "Java"],
-                },
-                {
-                    "category": "Frameworks",
-                    "list": ["React", "Django", "Spring"],
-                },
-            ],
-        }
+            {
+                "category": "Frameworks",
+                "list": ["React", "Django", "Spring"],
+            },
+        ],
+    }
 
-        # Render the template
-        rendered = render_template(template_path, data)
+    # Render the template
+    rendered = render_template(data)
 
-        # Check that the skills data is correctly inserted
-        assert "Languages" in rendered
-        assert "Python, JavaScript, Java" in rendered
-        assert "Frameworks" in rendered
-        assert "React, Django, Spring" in rendered
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(template_path):
-            os.unlink(template_path)
+    # Check that the skills data is correctly inserted
+    assert "Languages" in rendered
+    assert "Python, JavaScript, Java" in rendered
+    assert "Frameworks" in rendered
+    assert "React, Django, Spring" in rendered
 
 
 def test_render_template_with_missing_fields() -> None:
     """Test rendering a template with missing fields."""
-    # Create a temporary template file
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as temp_file:
-        temp_file.write(r"\documentclass{article}\begin{document}{{name}}\end{document}")
-        template_path = temp_file.name
+    # Test data with missing fields
+    data: dict = {}  # Empty data
 
-    try:
-        # Test data with missing fields
-        data: dict = {}  # Empty data
-
-        # Render the template should raise KeyError
-        with pytest.raises(KeyError):
-            render_template(template_path, data)
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(template_path):
-            os.unlink(template_path)
+    # Render the template should raise KeyError
+    with pytest.raises(KeyError):
+        render_template(data)
 
 
 def test_render_template_with_nonexistent_template() -> None:
@@ -477,10 +388,9 @@ def test_render_template_with_nonexistent_template() -> None:
         "skills": [],
     }
 
-    # Render the template with a nonexistent path
-    # This should still work because the function ignores the template_path
-    # and uses the built-in simple_template.tex
-    rendered = render_template("nonexistent_template.tex", data)
+    # Render the template
+    # This should work because the function uses the built-in simple_template.tex
+    rendered = render_template(data)
 
     # Check that the data is correctly inserted
     assert "Test User" in rendered

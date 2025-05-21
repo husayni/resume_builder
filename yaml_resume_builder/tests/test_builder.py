@@ -180,26 +180,18 @@ def test_build_resume(mock_render_template: MagicMock, mock_compile_latex: Magic
     mock_compile_latex.return_value = os.path.join("output_dir", "resume.pdf")
 
     # Create temporary files for testing
-    # Using nested context managers for Python 3.8 compatibility
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as template_file:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
-                # Write test data to the YAML file
-                yaml_file.write("name: Test User\nage: 30")
-                yaml_path = yaml_file.name
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
+            # Write test data to the YAML file
+            yaml_file.write("name: Test User\nage: 30")
+            yaml_path = yaml_file.name
 
-                # Write test template to the template file
-                template_file.write(
-                    "\\documentclass{article}\\begin{document}{{name}}\\end{document}"
-                )
-                template_path = template_file.name
-
-                # Get the output path
-                output_path = output_file.name
+            # Get the output path
+            output_path = output_file.name
 
     try:
         # Test building the resume
-        result = build_resume(yaml_path, output_path, template_path)
+        result = build_resume(yaml_path, output_path)
 
         # Check that the functions were called with the correct arguments
         mock_render_template.assert_called_once()
@@ -209,7 +201,7 @@ def test_build_resume(mock_render_template: MagicMock, mock_compile_latex: Magic
         assert result == output_path
     finally:
         # Clean up the temporary files
-        for path in [yaml_path, template_path, output_path]:
+        for path in [yaml_path, output_path]:
             if os.path.exists(path):
                 os.unlink(path)
 
@@ -234,16 +226,14 @@ def test_build_resume_pdf_not_exists(
 
     # Create temporary files for testing
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".tex", delete=False) as template_file:
-            with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
-                yaml_file.write("name: Test User\nage: 30")
-                yaml_path = yaml_file.name
-                template_path = template_file.name
-                output_path = output_file.name
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
+            yaml_file.write("name: Test User\nage: 30")
+            yaml_path = yaml_file.name
+            output_path = output_file.name
 
     try:
         # Test building the resume
-        result = build_resume(yaml_path, output_path, template_path)
+        result = build_resume(yaml_path, output_path)
 
         # Check that the returned path is correct
         assert result == output_path
@@ -254,7 +244,7 @@ def test_build_resume_pdf_not_exists(
             assert content == "Mock PDF content"
     finally:
         # Clean up the temporary files
-        for path in [yaml_path, template_path, output_path]:
+        for path in [yaml_path, output_path]:
             if os.path.exists(path):
                 os.unlink(path)
 
@@ -391,14 +381,4 @@ skills: []
 def test_build_resume_input_not_found() -> None:
     """Test building a resume with a non-existent input file."""
     with pytest.raises(FileNotFoundError):
-        build_resume("non_existent_file.yml", "output.pdf", "template.tex")
-
-
-@patch("os.path.exists")
-def test_build_resume_template_not_found(mock_exists: MagicMock) -> None:
-    """Test building a resume with a non-existent template file."""
-    # Mock os.path.exists to return True for the input file and False for the template file
-    mock_exists.side_effect = lambda path: path != "template.tex"
-
-    with pytest.raises(FileNotFoundError):
-        build_resume("input.yml", "output.pdf", "template.tex")
+        build_resume("non_existent_file.yml", "output.pdf")
