@@ -59,16 +59,17 @@ jobs:
 
       - name: Run ruff
         run: |
-          ruff check .
-          ruff format --check .
+          python -m ruff check .
+          python -m ruff format --check .
 
       - name: Run isort
-        run: |
-          isort --check --diff .
+        run: python -m isort --check --diff .
+
+      - name: Install type stubs
+        run: pip install types-PyYAML pytest-mypy-plugins
 
       - name: Run mypy
-        run: |
-          mypy yaml_resume_builder
+        run: python -m mypy yaml_resume_builder
 
   security:
     name: Security Scan
@@ -86,16 +87,13 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install bandit safety
           pip install -e ".[dev]"
 
       - name: Run Bandit security scan
-        run: |
-          bandit -r yaml_resume_builder/ -x yaml_resume_builder/tests/ -ll
+        run: python -m bandit -r yaml_resume_builder/ -x yaml_resume_builder/tests/ -ll
 
       - name: Check dependencies with Safety
-        run: |
-          safety check --full-report --ignore 51457
+        run: python -m safety check --full-report --ignore 51457
 
   test-ubuntu:
     name: Test Python 3.8 on Ubuntu
@@ -108,7 +106,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.8'
@@ -117,21 +115,18 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pytest pytest-cov
           pip install -e ".[dev]"
 
-      # Cache LaTeX installation to speed up builds
-      - name: Cache LaTeX installation
-        id: cache-latex
+      - name: Cache APT packages
+        id: cache-apt
         uses: actions/cache@v4
         with:
-          path: /tmp/texlive
-          key: ubuntu-texlive-${{ hashFiles('**/pyproject.toml') }}
+          path: /var/cache/apt/archives
+          key: ${{ runner.os }}-apt-texlive
           restore-keys: |
-            ubuntu-texlive-
+            ${{ runner.os }}-apt-texlive
 
       - name: Install LaTeX
-        if: steps.cache-latex.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y texlive-latex-base texlive-fonts-recommended texlive-fonts-extra texlive-latex-extra latexmk
@@ -175,12 +170,10 @@ jobs:
           pip install build wheel twine
 
       - name: Build package
-        run: |
-          python -m build
+        run: python -m build
 
       - name: Check package
-        run: |
-          twine check dist/*
+        run: python -m twine check dist/*
 
       - name: Store built package
         uses: actions/upload-artifact@v4

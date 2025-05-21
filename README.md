@@ -38,14 +38,8 @@ Install MiKTeX (includes latexmk):
 # Install from PyPI
 pip install yaml-resume-builder
 
-# Install using uv
-uv add yaml-resume-builder
-
 # Or install directly from GitHub
 pip install git+https://github.com/husayni/resume_builder.git
-
-# Or install using uv directly from GitHub
-uv add https://github.com/husayni/resume_builder.git
 ```
 
 ### For Development
@@ -55,12 +49,12 @@ uv add https://github.com/husayni/resume_builder.git
 git clone https://github.com/husayni/resume_builder.git
 cd resume_builder
 
-# Create and activate a virtual environment using uv
-uv venv
+# Create and activate a virtual environment
+python -m venv .venv
 source .venv/bin/activate
 
-# Install the package in development mode
-pip install -e .
+# Install the package in development mode with dev dependencies
+pip install -e ".[dev]"
 ```
 
 ## Usage
