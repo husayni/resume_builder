@@ -60,36 +60,20 @@ jobs:
           # Extract package name and version from pyproject.toml
           PACKAGE_NAME=$(grep -m 1 'name = ' pyproject.toml | sed 's/name = "\(.*\)"/\1/')
           PACKAGE_VERSION=$(grep -m 1 'version = ' pyproject.toml | sed 's/version = "\(.*\)"/\1/')
-          echo "Checking if version $PACKAGE_VERSION of package $PACKAGE_NAME exists on PyPI"
+          echo "Package: $PACKAGE_NAME"
+          echo "Current version: $PACKAGE_VERSION"
 
-          # Check if the specific version exists on PyPI
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/project/$PACKAGE_NAME/$PACKAGE_VERSION/")
+          # Use the PyPI JSON API to check if the version exists
+          echo "Checking if version exists on PyPI..."
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/pypi/$PACKAGE_NAME/$PACKAGE_VERSION/json")
 
           if [ "$HTTP_STATUS" = "200" ]; then
-            # Version already exists
-            echo "Version $PACKAGE_VERSION of package $PACKAGE_NAME already exists on PyPI."
+            echo "Version $PACKAGE_VERSION already exists on PyPI."
             echo "Skipping publish step."
             echo "should_publish=false" >> $GITHUB_OUTPUT
-          elif [ "$HTTP_STATUS" = "404" ]; then
-            # Version doesn't exist, check if package exists
-            PACKAGE_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://pypi.org/project/$PACKAGE_NAME/")
-
-            if [ "$PACKAGE_STATUS" = "200" ]; then
-              echo "Package $PACKAGE_NAME exists on PyPI, but version $PACKAGE_VERSION is new."
-              echo "Will publish new version."
-              echo "should_publish=true" >> $GITHUB_OUTPUT
-            elif [ "$PACKAGE_STATUS" = "404" ]; then
-              echo "Package $PACKAGE_NAME is new on PyPI."
-              echo "Will publish new package."
-              echo "should_publish=true" >> $GITHUB_OUTPUT
-            else
-              echo "Unexpected status code: $PACKAGE_STATUS when checking package name."
-              echo "Continuing with publish step."
-              echo "should_publish=true" >> $GITHUB_OUTPUT
-            fi
           else
-            echo "Unexpected status code: $HTTP_STATUS when checking version."
-            echo "Continuing with publish step."
+            echo "Version $PACKAGE_VERSION does not exist on PyPI."
+            echo "Will publish new version."
             echo "should_publish=true" >> $GITHUB_OUTPUT
           fi
 
