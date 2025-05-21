@@ -77,3 +77,29 @@ skills:
       - Docker
       - AWS
       - CI/CD
+
+achievements:
+  - title: "Best Paper Award"
+    issuer: "Conference on Software Engineering"
+    date: "2023"
+
+  - title: "Hackathon Winner"
+    issuer: "Tech Innovation Summit"
+    date: "2022"
+
+  - title: "Seminar speaker on 'Deploying ML Models in Production'"
+    issuer: "University Tech Week"
+    date: "2021"
+
+  - title: "First Prize in Regional Coding Competition"
+    issuer: "Tech Association"
+    date: "2020"
+
+publications:
+  - title: "Innovative Approaches to Software Testing in Cloud Environments"
+    journal: "Journal of Software Engineering"
+    date: "January 2023"
+
+  - title: "Machine Learning Applications in DevOps Pipelines"
+    journal: "International Conference on DevOps"
+    date: "June 2022"

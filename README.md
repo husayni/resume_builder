@@ -85,6 +85,8 @@ build_resume(
 
 The YAML file should have the following structure. Any unknown fields will be ignored with a warning message:
 
+The template includes sections for Education, Experience, Projects, Skills, and Achievements & Publications. All sections are optional - if you don't provide data for a section, it will be empty in the generated resume.
+
 ```yaml
 name: Your Name
 title: Your Title
@@ -119,6 +121,17 @@ skills:
     list: [Python, JavaScript, Java]
   - category: Frameworks
     list: [Django, React, Spring]
+achievements:
+  - title: "Award Name"
+    issuer: "Awarding Organization"
+    date: "2023"
+  - title: "Seminar speaker on 'Topic Name'"
+    issuer: "Event Name"
+    date: "2022"
+publications:
+  - title: "Publication Title"
+    journal: "Journal or Conference Name"
+    date: "January 2023"
 ```
 
 ## Development
