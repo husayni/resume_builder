@@ -1,4 +1,5 @@
 include yaml_resume_builder/*.tex
+include yaml_resume_builder/*.tex.template
 include yaml_resume_builder/*.yml
 include README.md
 include LICENSE

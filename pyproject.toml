@@ -36,7 +36,7 @@ dev = [
 packages = ["yaml_resume_builder"]
 
 [tool.setuptools.package-data]
-yaml_resume_builder = ["*.tex", "*.yml"]
+yaml_resume_builder = ["*.tex", "*.tex.template", "*.yml"]
 
 [tool.ruff]
 target-version = "py38"  # Updated to match minimum Python version
