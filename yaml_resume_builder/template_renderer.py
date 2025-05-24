@@ -4,13 +4,13 @@ This module contains functionality for rendering LaTeX templates.
 """
 
 import logging
-from typing import Any, Dict, List, Set
+from typing import Any, Dict, List, Set, Union
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 
-def escape_latex(text: Any) -> Any:
+def escape_latex(text: Any) -> str:
     """Escape LaTeX special characters.
 
     Args:
@@ -20,7 +20,7 @@ def escape_latex(text: Any) -> Any:
         str: The escaped text.
     """
     if not isinstance(text, str):
-        return text
+        return str(text)
 
     # Define LaTeX special characters and their escaped versions
     latex_special_chars = {
@@ -53,14 +53,27 @@ KNOWN_ROOT_FIELDS = {
     "skills",
     "achievements",
     "publications",
+    "certifications",
 }
 KNOWN_CONTACT_FIELDS = {"phone", "email", "linkedin", "github"}
 KNOWN_EDUCATION_FIELDS = {"school", "location", "degree", "dates"}
-KNOWN_EXPERIENCE_FIELDS = {"company", "role", "location", "dates", "bullets"}
-KNOWN_PROJECT_FIELDS = {"name", "technologies", "date", "link", "bullets"}
+KNOWN_EXPERIENCE_FIELDS = {
+    "company",
+    "role",
+    "location",
+    "dates",
+    "description",
+    "bullets",
+}  # Support both formats
+KNOWN_PROJECT_FIELDS = {
+    "name",
+    "technologies",
+    "date",
+    "link",
+    "description",
+    "bullets",
+}  # Support both formats
 KNOWN_SKILLS_FIELDS = {"category", "list"}
-KNOWN_ACHIEVEMENT_FIELDS = {"title", "issuer", "date", "description", "bullets"}
-KNOWN_PUBLICATION_FIELDS = {"title", "authors", "journal", "date", "link", "bullets"}
 
 
 def validate_root_fields(data: Dict[str, Any]) -> None:
@@ -102,6 +115,42 @@ def validate_list_entries(
                     logger.warning(f"Unknown field '{field}' in {section_name} entry")
 
 
+def _validate_achievements(data: Dict[str, Any]) -> None:
+    """Validate achievements section (support both old and new formats)."""
+    if "achievements" in data and isinstance(data["achievements"], list):
+        for i, achievement in enumerate(data["achievements"]):
+            if isinstance(achievement, dict):
+                # Old format: validate known fields
+                known_fields = {"title", "issuer", "date", "description", "bullets"}
+                for field in achievement:
+                    if field not in known_fields:
+                        logger.warning(f"Unknown field '{field}' in achievement entry")
+            elif not isinstance(achievement, str):
+                logger.warning(f"Achievement at index {i} should be a string or dict")
+
+
+def _validate_publications(data: Dict[str, Any]) -> None:
+    """Validate publications section (support both old and new formats)."""
+    if "publications" in data and isinstance(data["publications"], list):
+        for i, publication in enumerate(data["publications"]):
+            if isinstance(publication, dict):
+                # Old format: validate known fields
+                known_fields = {"title", "authors", "journal", "date", "link", "bullets"}
+                for field in publication:
+                    if field not in known_fields:
+                        logger.warning(f"Unknown field '{field}' in publication entry")
+            elif not isinstance(publication, str):
+                logger.warning(f"Publication at index {i} should be a string or dict")
+
+
+def _validate_certifications(data: Dict[str, Any]) -> None:
+    """Validate certifications section (simple strings)."""
+    if "certifications" in data and isinstance(data["certifications"], list):
+        for i, certification in enumerate(data["certifications"]):
+            if not isinstance(certification, str):
+                logger.warning(f"Certification at index {i} should be a string")
+
+
 def validate_data(data: Dict[str, Any]) -> None:
     """Validate the data structure and warn about unknown fields.
 
@@ -131,13 +180,10 @@ def validate_data(data: Dict[str, Any]) -> None:
     if "skills" in data and isinstance(data["skills"], list):
         validate_list_entries(data["skills"], KNOWN_SKILLS_FIELDS, "skills")
 
-    # Validate achievements fields
-    if "achievements" in data and isinstance(data["achievements"], list):
-        validate_list_entries(data["achievements"], KNOWN_ACHIEVEMENT_FIELDS, "achievement")
-
-    # Validate publications fields
-    if "publications" in data and isinstance(data["publications"], list):
-        validate_list_entries(data["publications"], KNOWN_PUBLICATION_FIELDS, "publication")
+    # Validate achievements, publications, and certifications
+    _validate_achievements(data)
+    _validate_publications(data)
+    _validate_certifications(data)
 
 
 def _build_education_section(data: Dict[str, Any]) -> str:
@@ -190,8 +236,10 @@ def _build_experience_section(data: Dict[str, Any]) -> str:
             + "\n"
         )
         experience_section += r"  \resumeItemListStart" + "\n"
-        for bullet in exp["bullets"]:
-            experience_section += r"    \resumeItem{" + escape_latex(bullet) + r"}" + "\n"
+        # Handle both 'description' (new format) and 'bullets' (old format for backward compatibility)
+        descriptions = exp.get("description", exp.get("bullets", []))
+        for description in descriptions:
+            experience_section += r"    \resumeItem{" + escape_latex(description) + r"}" + "\n"
         experience_section += r"  \resumeItemListEnd" + "\n"
     return experience_section
 
@@ -227,8 +275,10 @@ def _build_projects_section(data: Dict[str, Any]) -> str:
 
         projects_section += r"  " + project_title + "\n"
         projects_section += r"  \resumeItemListStart" + "\n"
-        for bullet in project["bullets"]:
-            projects_section += r"    \resumeItem{" + escape_latex(bullet) + r"}" + "\n"
+        # Handle both 'description' (new format) and 'bullets' (old format for backward compatibility)
+        descriptions = project.get("description", project.get("bullets", []))
+        for description in descriptions:
+            projects_section += r"    \resumeItem{" + escape_latex(description) + r"}" + "\n"
         projects_section += r"  \resumeItemListEnd" + "\n"
     return projects_section
 
@@ -255,68 +305,64 @@ def _build_skills_section(data: Dict[str, Any]) -> str:
     )
 
 
-def _format_achievement(achievement: Dict[str, Any]) -> str:
-    """Format a single achievement entry.
-
-    Args:
-        achievement (dict): The achievement data.
-
-    Returns:
-        str: The formatted achievement text.
-    """
-    # Format: Achievement title at Organization (Year)
-    achievement_text = ""
-    if "title" in achievement:
-        achievement_text += escape_latex(achievement["title"])
-
-    if "issuer" in achievement and achievement["issuer"]:
-        achievement_text += " at " + escape_latex(achievement["issuer"])
-
-    if "date" in achievement and achievement["date"]:
-        achievement_text += " (" + escape_latex(achievement["date"]) + ")"
-
-    return r"    \resumeItem{" + achievement_text + r"}" + "\n"
+def _format_achievement_item(achievement: Union[str, Dict[str, Any]]) -> str:
+    """Format a single achievement item (supports both old and new formats)."""
+    if isinstance(achievement, str):
+        # New format: simple string
+        return r"    \resumeItem{" + escape_latex(achievement) + r"}" + "\n"
+    elif isinstance(achievement, dict):
+        # Old format: structured object
+        achievement_text = ""
+        if "title" in achievement:
+            achievement_text += escape_latex(str(achievement["title"]))
+        if "issuer" in achievement and achievement["issuer"]:
+            achievement_text += " at " + escape_latex(str(achievement["issuer"]))
+        if "date" in achievement and achievement["date"]:
+            achievement_text += " (" + escape_latex(str(achievement["date"])) + ")"
+        return r"    \resumeItem{" + achievement_text + r"}" + "\n"
+    return ""
 
 
-def _format_publication(publication: Dict[str, Any]) -> str:
-    """Format a single publication entry.
+def _format_publication_item(publication: Union[str, Dict[str, Any]]) -> str:
+    """Format a single publication item (supports both old and new formats)."""
+    if isinstance(publication, str):
+        # New format: simple string
+        return r"    \resumeItem{" + escape_latex(publication) + r"}" + "\n"
+    elif isinstance(publication, dict):
+        # Old format: structured object
+        publication_text = ""
+        if "title" in publication:
+            publication_text += r"``" + escape_latex(str(publication["title"])) + r"''"
+        if "journal" in publication and publication["journal"]:
+            publication_text += " in " + escape_latex(str(publication["journal"]))
+        if "date" in publication and publication["date"]:
+            publication_text += " (" + escape_latex(str(publication["date"])) + ")"
+        return r"    \resumeItem{" + publication_text + r"}" + "\n"
+    return ""
 
-    Args:
-        publication (dict): The publication data.
 
-    Returns:
-        str: The formatted publication text.
-    """
-    # Format: "Publication title" in Journal (Year)
-    publication_text = ""
-    if "title" in publication:
-        publication_text += r"``" + escape_latex(publication["title"]) + r"''"
-
-    if "journal" in publication and publication["journal"]:
-        publication_text += " in " + escape_latex(publication["journal"])
-
-    if "date" in publication and publication["date"]:
-        publication_text += " (" + escape_latex(publication["date"]) + ")"
-
-    return r"    \resumeItem{" + publication_text + r"}" + "\n"
+def _format_certification_item(certification: str) -> str:
+    """Format a single certification item."""
+    return r"    \resumeItem{" + escape_latex(certification) + r"}" + "\n"
 
 
 def _build_achievements_publications_section(data: Dict[str, Any]) -> str:
-    """Build the achievements and publications section of the resume.
+    """Build the achievements, publications, and certifications section of the resume.
 
     Args:
         data (dict): The resume data.
 
     Returns:
-        str: The formatted achievements and publications section.
-        Returns an empty string if both achievements and publications are empty.
+        str: The formatted achievements, publications, and certifications section.
+        Returns an empty string if all sections are empty.
     """
-    # Check if both achievements and publications are empty
+    # Check if any of the sections have content
     has_achievements = "achievements" in data and data["achievements"]
     has_publications = "publications" in data and data["publications"]
+    has_certifications = "certifications" in data and data["certifications"]
 
-    # If both are empty, return an empty string
-    if not has_achievements and not has_publications:
+    # If all are empty, return an empty string
+    if not has_achievements and not has_publications and not has_certifications:
         return ""
 
     section = r"\resumeItemListStart" + "\n"
@@ -324,12 +370,17 @@ def _build_achievements_publications_section(data: Dict[str, Any]) -> str:
     # Add achievements if available
     if has_achievements:
         for achievement in data["achievements"]:
-            section += _format_achievement(achievement)
+            section += _format_achievement_item(achievement)
 
     # Add publications if available
     if has_publications:
         for publication in data["publications"]:
-            section += _format_publication(publication)
+            section += _format_publication_item(publication)
+
+    # Add certifications if available
+    if has_certifications:
+        for certification in data["certifications"]:
+            section += _format_certification_item(certification)
 
     # End the item list
     section += r"  \resumeItemListEnd" + "\n"

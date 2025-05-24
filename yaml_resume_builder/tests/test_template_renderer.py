@@ -31,11 +31,11 @@ def test_escape_latex() -> None:
     # Just check that the original backslash is gone or properly escaped
     assert "\\" not in escaped or "\\textbackslash" in escaped
 
-    # Test with non-string input
-    assert escape_latex(123) == 123
-    assert escape_latex(None) is None
-    assert escape_latex([]) == []
-    assert escape_latex({}) == {}
+    # Test with non-string input (now converts to string)
+    assert escape_latex(123) == "123"
+    assert escape_latex(None) == "None"
+    assert escape_latex([]) == "[]"
+    assert escape_latex({}) == "{}"
 
 
 def test_render_template() -> None:
@@ -140,7 +140,7 @@ def test_render_template_with_projects() -> None:
             {
                 "name": "Test Project",
                 "link": "https://github.com/testuser/test-project",
-                "bullets": [
+                "description": [
                     "Built a web application",
                     "Used React and Node.js",
                     "Implemented CI/CD pipeline",
@@ -149,7 +149,7 @@ def test_render_template_with_projects() -> None:
             {
                 "name": "Another Project",
                 "link": "",  # Test with empty link
-                "bullets": [
+                "description": [
                     "Created a mobile app",
                     "Used Flutter",
                 ],
@@ -192,7 +192,7 @@ def test_render_template_with_projects_technologies_and_dates() -> None:
                 "technologies": "Python, Flask, React, PostgreSQL, Docker",
                 "date": "June 2020 - Present",
                 "link": "https://github.com/testuser/gitlytics",
-                "bullets": [
+                "description": [
                     "Developed a full-stack web application",
                     "Implemented GitHub OAuth",
                     "Visualized GitHub data to show collaboration",
@@ -203,7 +203,7 @@ def test_render_template_with_projects_technologies_and_dates() -> None:
                 "technologies": "Spigot API, Java, Maven, TravisCI, Git",
                 "date": "May 2018 - May 2020",
                 "link": "",
-                "bullets": [
+                "description": [
                     "Developed a Minecraft server plugin",
                     "Published plugin gaining 2K+ downloads",
                 ],
@@ -211,7 +211,7 @@ def test_render_template_with_projects_technologies_and_dates() -> None:
             {
                 "name": "Legacy Project",  # Test with missing technologies and date
                 "link": "https://example.com",
-                "bullets": [
+                "description": [
                     "Created a legacy project",
                 ],
             },
@@ -273,7 +273,7 @@ def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
                 "role": "Software Engineer",
                 "location": "Test City, CA",
                 "dates": "2020 - Present",
-                "bullets": ["Developed feature X"],
+                "description": ["Developed feature X"],
                 "manager": "John Doe",  # Extra field in experience
                 "team_size": 5,  # Extra field in experience
             }
@@ -284,7 +284,7 @@ def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
                 "technologies": "Python, Django",
                 "date": "2023",
                 "link": "https://github.com/testuser/test-project",
-                "bullets": ["Built a web application"],
+                "description": ["Built a web application"],
                 "status": "Completed",  # Extra field in project
                 "collaborators": ["Jane Doe"],  # Extra field in project
             }
@@ -296,12 +296,8 @@ def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
                 "proficiency": ["Expert", "Intermediate"],  # Extra field in skills
             }
         ],
-        "certifications": [  # Extra section
-            {
-                "name": "AWS Certified Developer",
-                "date": "2023",
-                "issuer": "Amazon Web Services",
-            }
+        "certifications": [  # New section with simple strings
+            "AWS Certified Developer - Associate (2023)",
         ],
     }
 
@@ -313,7 +309,7 @@ def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
 
     # Check that warnings were logged for extra fields
     assert "Unknown field 'title' at root level" in caplog.text
-    assert "Unknown field 'certifications' at root level" in caplog.text
+    # Note: 'certifications' is now a known field, so no warning expected
     assert "Unknown field 'website' in contact section" in caplog.text
     assert "Unknown field 'twitter' in contact section" in caplog.text
     assert "Unknown field 'gpa' in education entry" in caplog.text
@@ -323,6 +319,9 @@ def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
     assert "Unknown field 'status' in project entry" in caplog.text
     assert "Unknown field 'collaborators' in project entry" in caplog.text
     assert "Unknown field 'proficiency' in skills entry" in caplog.text
+
+    # Check that certifications are rendered correctly
+    assert "AWS Certified Developer - Associate (2023)" in rendered
 
 
 def test_render_template_with_skills() -> None:

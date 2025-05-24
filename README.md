@@ -85,53 +85,88 @@ build_resume(
 
 The YAML file should have the following structure. Any unknown fields will be ignored with a warning message:
 
-The template includes sections for Education, Experience, Projects, Skills, and Achievements & Publications. All sections are optional - if you don't provide data for a section, it will be empty in the generated resume.
+The template includes sections for Education, Experience, Projects, Skills, Achievements, Publications, and Certifications. All sections are optional - if you don't provide data for a section, it will be empty in the generated resume.
 
 ```yaml
-name: Your Name
-title: Your Title
+name: Your Full Name
 contact:
+  phone: "+1 (123) 456-7890"
   email: your.email@example.com
-  phone: "+1 123 456 7890"
-  github: yourusername
-  linkedin: yourusername
+  linkedin: your-linkedin-username
+  github: your-github-username
+
 education:
   - school: University Name
-    degree: Degree Name
+    location: City, State
+    degree: Degree Name (e.g., Bachelor of Science in Computer Science)
     dates: "2020 - 2024"
-    location: City, Country
+
+  - school: Another University (if applicable)
+    location: City, State
+    degree: Another Degree
+    dates: "2016 - 2020"
+
 experience:
   - company: Company Name
-    role: Your Role
+    role: Your Job Title
+    location: City, State
     dates: "Jan 2023 - Present"
-    location: City, Country
-    bullets:
-      - Accomplishment 1
-      - Accomplishment 2
+    description:
+      - "Accomplished [specific achievement] resulting in [specific measurable outcome]"
+      - "Led a team of X people to deliver [project/product] that [specific result]"
+      - "Implemented [specific technology/process] that improved [specific metric] by X%"
+
+  - company: Previous Company
+    role: Previous Job Title
+    location: Remote
+    dates: "Jun 2021 - Dec 2022"
+    description:
+      - "Developed [feature/product] using [technologies] that [specific outcome]"
+      - "Collaborated with cross-functional teams to [specific achievement]"
+      - "Optimized [process/system] resulting in [specific improvement]"
+
 projects:
-  - name: Project Name
+  - name: Gitlytics
     technologies: Python, Flask, React, PostgreSQL, Docker
-    date: "June 2020 - Present"
-    link: https://github.com/yourusername/project
-    bullets:
-      - Description 1
-      - Description 2
+    date: June 2020 - Present
+    link: https://github.com/yourusername/gitlytics
+    description:
+      - "Developed a full-stack web application using Flask serving a REST API with React as the frontend"
+      - "Implemented GitHub OAuth to get data from user's repositories"
+      - "Visualized GitHub data to show collaboration"
+      - "Used Celery and Redis for asynchronous tasks"
+
+  - name: Simple Paintball
+    technologies: Spigot API, Java, Maven, TravisCI, Git
+    date: May 2018 - May 2020
+    link: https://github.com/yourusername/simple-paintball
+    description:
+      - "Developed a Minecraft server plugin to entertain kids during free time for a previous job"
+      - "Published plugin to websites gaining 2K+ downloads and an average 4.5/5-star review"
+      - "Implemented continuous delivery using TravisCI to build the plugin upon new a release"
+      - "Collaborated with Minecraft server administrators to suggest features and get feedback"
+
 skills:
   - category: Languages
-    list: [Python, JavaScript, Java]
+    list: [Python, JavaScript, Java, SQL]
   - category: Frameworks
-    list: [Django, React, Spring]
+    list: [React, Django, Spring Boot, Express.js]
+
+  - category: Tools
+    list: [Git, Docker, AWS, CI/CD]
+
 achievements:
-  - title: "Award Name"
-    issuer: "Awarding Organization"
-    date: "2023"
-  - title: "Seminar speaker on 'Topic Name'"
-    issuer: "Event Name"
-    date: "2022"
+  - Won "Best Paper Award" at Conference on Software Engineering (2023)
+  - Won "Hackathon Winner" at Tech Innovation Summit (2022)
+  - Won "First Prize in Regional Coding Competition" at Tech Association (2020)
+
 publications:
-  - title: "Publication Title"
-    journal: "Journal or Conference Name"
-    date: "January 2023"
+  - Innovative Approaches to Software Testing in Cloud Environments, Journal of Software Engineering, January 2023
+  - Machine Learning Applications in DevOps Pipelines, International Conference on DevOps, June 2022
+
+certifications:
+  - AWS Certified Developer - Associate (2023)
+  - Google Cloud Certified - Associate Cloud Engineer (2022)
 ```
 
 ## Development

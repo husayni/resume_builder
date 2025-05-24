@@ -16,7 +16,7 @@ experience:
     role: Software Engineer
     location: City, State
     dates: "Jan 2022 - Present"
-    bullets:
+    description:
       - "Developed and maintained web applications using React and Node.js"
       - "Implemented CI/CD pipelines using GitHub Actions"
       - "Optimized database queries resulting in 30% performance improvement"
@@ -25,32 +25,23 @@ projects:
   - name: Personal Website
     technologies: React, Next.js, Tailwind CSS
     date: "2022"
-    bullets:
+    description:
       - "Designed and developed a personal portfolio website"
       - "Implemented responsive design for mobile and desktop"
 
 skills:
   - category: Languages
-    list:
-      - Python
-      - JavaScript
-      - Java
-      - SQL
+    list: [Python, JavaScript, Java, SQL]
 
   - category: Frameworks
-    list:
-      - React
-      - Node.js
-      - Express
-      - Django
+    list: [React, Node.js, Express, Django]
 
 # With achievements
 achievements:
-  - title: "Best Paper Award"
-    issuer: "Conference on Software Engineering"
-    date: "2023"
+  - Won "Best Paper Award" at Conference on Software Engineering (2023)
 
 publications:
-  - title: "Innovative Approaches to Software Testing"
-    journal: "Journal of Software Engineering"
-    date: "2023"
+  - Innovative Approaches to Software Testing, Journal of Software Engineering, 2023
+
+certifications:
+  - AWS Certified Developer - Associate (2023)
