@@ -378,6 +378,60 @@ skills: []
             shutil.rmtree(temp_dir)
 
 
+@patch("yaml_resume_builder.builder.compile_latex")
+@patch("yaml_resume_builder.builder.render_template")
+def test_build_resume_with_debug(
+    mock_render_template: MagicMock, mock_compile_latex: MagicMock
+) -> None:
+    """Test building a resume with debug mode enabled."""
+    # Mock the render_template function
+    mock_render_template.return_value = (
+        "\\documentclass{article}\\begin{document}Test\\end{document}"
+    )
+
+    # Mock the compile_latex function
+    mock_compile_latex.return_value = os.path.join("output_dir", "resume.pdf")
+
+    # Create temporary files for testing
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
+        # Write test data to the YAML file
+        yaml_file.write("name: Test User\nage: 30")
+        yaml_path = yaml_file.name
+
+        # Define output paths
+        output_path = os.path.join(tempfile.gettempdir(), "test_debug.pdf")
+        tex_output_path = output_path.replace(".pdf", ".tex")
+
+    try:
+        # Test building the resume with debug=True
+        result = build_resume(yaml_path, output_path, debug=True)
+
+        # Check that the functions were called with the correct arguments
+        mock_render_template.assert_called_once()
+        mock_compile_latex.assert_called_once()
+
+        # Check that the returned path is correct
+        assert result == output_path
+
+        # Check that the .tex file was created
+        assert os.path.exists(tex_output_path)
+
+        # Check that the .tex file contains the expected content
+        with open(tex_output_path, "r") as f:
+            tex_content = f.read()
+            assert "\\documentclass{article}" in tex_content
+            assert "Test" in tex_content
+
+        # Clean up the .tex file
+        if os.path.exists(tex_output_path):
+            os.unlink(tex_output_path)
+    finally:
+        # Clean up the temporary files
+        for path in [yaml_path, output_path]:
+            if os.path.exists(path):
+                os.unlink(path)
+
+
 def test_build_resume_input_not_found() -> None:
     """Test building a resume with a non-existent input file."""
     with pytest.raises(FileNotFoundError):

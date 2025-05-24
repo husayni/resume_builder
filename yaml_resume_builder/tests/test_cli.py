@@ -39,10 +39,53 @@ def test_build_command(mock_build_resume: MagicMock) -> None:
         assert result.exit_code == 0
 
         # Check that the build_resume function was called with the correct arguments
-        mock_build_resume.assert_called_once_with(yaml_path, output_path)
+        mock_build_resume.assert_called_once_with(yaml_path, output_path, debug=False)
 
         # Check that the success message is in the output
         assert "Resume successfully built and saved to: output.pdf" in result.output
+    finally:
+        # Clean up the temporary files
+        for path in [yaml_path, output_path]:
+            if os.path.exists(path):
+                os.unlink(path)
+
+
+@patch("yaml_resume_builder.cli.build_resume")
+def test_build_command_with_debug(mock_build_resume: MagicMock) -> None:
+    """Test the build command with debug flag."""
+    # Mock the build_resume function
+    mock_build_resume.return_value = "output.pdf"
+
+    # Create temporary files for testing
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".pdf", delete=False) as output_file:
+            # Write test data to the files
+            yaml_file.write("name: Test User\nage: 30")
+
+            # Get the file paths
+            yaml_path = yaml_file.name
+            output_path = output_file.name
+
+    try:
+        # Create a CLI runner
+        runner = CliRunner()
+
+        # Run the build command with debug flag
+        result = runner.invoke(
+            cli,
+            ["build", "--input", yaml_path, "--output", output_path, "--debug"],
+        )
+
+        # Check that the command succeeded
+        assert result.exit_code == 0
+
+        # Check that the build_resume function was called with debug=True
+        mock_build_resume.assert_called_once_with(yaml_path, output_path, debug=True)
+
+        # Check that both success messages are in the output
+        assert "Resume successfully built and saved to: output.pdf" in result.output
+        assert "Debug mode: LaTeX source saved to:" in result.output
+        assert ".tex" in result.output
     finally:
         # Clean up the temporary files
         for path in [yaml_path, output_path]:
@@ -213,6 +256,7 @@ def test_build_help() -> None:
     assert "Build a resume from a YAML file" in result.output
     assert "--input" in result.output
     assert "--output" in result.output
+    assert "--debug" in result.output
 
 
 def test_init_help() -> None:

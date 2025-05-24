@@ -36,16 +36,28 @@ def cli() -> None:
     type=click.Path(file_okay=True, dir_okay=False, writable=True),
     help="Path to save the output PDF file.",
 )
-def build(input: str, output: str) -> None:
+@click.option(
+    "--debug",
+    "-d",
+    is_flag=True,
+    help="Enable debug mode to save the intermediate .tex file alongside the PDF.",
+)
+def build(input: str, output: str, debug: bool) -> None:
     """Build a resume from a YAML file.
 
     Args:
         input (str): Path to the input YAML file.
         output (str): Path to save the output PDF file.
+        debug (bool): Whether to save the intermediate .tex file.
     """
     try:
-        output_path = build_resume(input, output)
+        output_path = build_resume(input, output, debug=debug)
         click.echo(f"Resume successfully built and saved to: {output_path}")
+
+        if debug:
+            # Generate the .tex file path based on the output PDF path
+            tex_output = output.replace(".pdf", ".tex")
+            click.echo(f"Debug mode: LaTeX source saved to: {tex_output}")
     except Exception as e:
         click.echo(f"Error building resume: {e}", err=True)
         sys.exit(1)

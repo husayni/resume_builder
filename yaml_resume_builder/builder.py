@@ -93,12 +93,13 @@ def compile_latex(tex_path: str, output_dir: str) -> str:
         raise
 
 
-def build_resume(input_path: str, output_path: str) -> str:
+def build_resume(input_path: str, output_path: str, debug: bool = False) -> str:
     """Build a resume from a YAML file.
 
     Args:
         input_path (str): Path to the YAML file.
         output_path (str): Path to save the generated PDF.
+        debug (bool): Whether to save the intermediate .tex file alongside the PDF.
 
     Returns:
         str: Path to the generated PDF file.
@@ -124,6 +125,19 @@ def build_resume(input_path: str, output_path: str) -> str:
         temp_tex_path = os.path.join(temp_dir, "resume.tex")
         with open(temp_tex_path, "w") as file:
             file.write(tex_content)
+
+        # If debug mode is enabled, save the .tex file alongside the PDF
+        if debug:
+            # Generate the .tex file path based on the output PDF path
+            tex_output_path = output_path.replace(".pdf", ".tex")
+
+            # Create output directory if it doesn't exist
+            output_dir = os.path.dirname(tex_output_path)
+            if output_dir and not os.path.exists(output_dir):
+                os.makedirs(output_dir)
+
+            # Copy the .tex file to the output location
+            shutil.copy(temp_tex_path, tex_output_path)
 
         # Compile the LaTeX file
         pdf_path = compile_latex(temp_tex_path, temp_dir)
