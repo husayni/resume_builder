@@ -39,7 +39,9 @@ def test_build_command(mock_build_resume: MagicMock) -> None:
         assert result.exit_code == 0
 
         # Check that the build_resume function was called with the correct arguments
-        mock_build_resume.assert_called_once_with(yaml_path, output_path, debug=False)
+        mock_build_resume.assert_called_once_with(
+            yaml_path, output_path, debug=False, one_page=False
+        )
 
         # Check that the success message is in the output
         assert "Resume successfully built and saved to: output.pdf" in result.output
@@ -80,7 +82,9 @@ def test_build_command_with_debug(mock_build_resume: MagicMock) -> None:
         assert result.exit_code == 0
 
         # Check that the build_resume function was called with debug=True
-        mock_build_resume.assert_called_once_with(yaml_path, output_path, debug=True)
+        mock_build_resume.assert_called_once_with(
+            yaml_path, output_path, debug=True, one_page=False
+        )
 
         # Check that both success messages are in the output
         assert "Resume successfully built and saved to: output.pdf" in result.output
