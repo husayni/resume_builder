@@ -8,13 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
-from yaml_resume_builder.builder import (
-    build_resume,
-    build_resume_with_optimization,
-    compile_latex,
-    count_pdf_pages,
-    load_yaml,
-)
+from yaml_resume_builder.builder import build_resume, compile_latex, count_pdf_pages, load_yaml
 
 
 def test_load_yaml() -> None:
@@ -506,7 +500,7 @@ def test_count_pdf_pages_file_not_found() -> None:
 @patch("yaml_resume_builder.builder.count_pdf_pages")
 @patch("yaml_resume_builder.builder.compile_latex")
 @patch("yaml_resume_builder.builder.render_template")
-def test_build_resume_with_optimization_one_page(
+def test_build_resume_one_page_optimization(
     mock_render_template: MagicMock,
     mock_compile_latex: MagicMock,
     mock_count_pdf_pages: MagicMock,
@@ -547,7 +541,7 @@ skills: []
             f.write("Mock PDF content")
 
         # Test building the resume with one-page optimization
-        result = build_resume_with_optimization(yaml_path, output_path, one_page=True)
+        result = build_resume(yaml_path, output_path, one_page=True)
 
         # Check that the returned path is correct
         assert result == output_path
@@ -575,7 +569,7 @@ skills: []
 @patch("yaml_resume_builder.builder.count_pdf_pages")
 @patch("yaml_resume_builder.builder.compile_latex")
 @patch("yaml_resume_builder.builder.render_template")
-def test_build_resume_with_optimization_fallback(
+def test_build_resume_one_page_optimization_fallback(
     mock_render_template: MagicMock,
     mock_compile_latex: MagicMock,
     mock_count_pdf_pages: MagicMock,
@@ -616,7 +610,7 @@ skills: []
             f.write("Mock PDF content")
 
         # Test building the resume with one-page optimization
-        result = build_resume_with_optimization(yaml_path, output_path, one_page=True)
+        result = build_resume(yaml_path, output_path, one_page=True)
 
         # Check that the returned path is correct
         assert result == output_path
@@ -635,8 +629,8 @@ skills: []
             os.unlink(yaml_path)
 
 
-def test_build_resume_with_optimization_disabled() -> None:
-    """Test that build_resume_with_optimization calls regular build_resume when one_page=False."""
+def test_build_resume_one_page_disabled() -> None:
+    """Test that build_resume works normally when one_page=False."""
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
         yaml_file.write("""
 name: Test User
@@ -654,15 +648,23 @@ skills: []
         output_path = os.path.join(tempfile.gettempdir(), "output.pdf")
 
     try:
-        with patch("yaml_resume_builder.builder.build_resume") as mock_build_resume:
-            mock_build_resume.return_value = output_path
+        with patch("yaml_resume_builder.builder.render_template") as mock_render_template:
+            with patch("yaml_resume_builder.builder.compile_latex") as mock_compile_latex:
+                mock_render_template.return_value = (
+                    "\\documentclass{article}\\begin{document}Test\\end{document}"
+                )
+                mock_compile_latex.return_value = output_path
 
-            # Test building the resume with one_page=False
-            result = build_resume_with_optimization(yaml_path, output_path, one_page=False)
+                # Test building the resume with one_page=False
+                result = build_resume(yaml_path, output_path, one_page=False)
 
-            # Verify that build_resume was called
-            mock_build_resume.assert_called_once_with(yaml_path, output_path, False)
-            assert result == output_path
+                # Verify that render_template was called without optimization_params
+                mock_render_template.assert_called_once()
+                _, kwargs = mock_render_template.call_args
+                assert (
+                    "optimization_params" not in kwargs or kwargs.get("optimization_params") is None
+                )
+                assert result == output_path
     finally:
         # Clean up the temporary file
         if os.path.exists(yaml_path):

@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - One-page resume optimization feature with `--one-page` CLI flag
 - Progressive optimization with 5 levels (spacing, font size, margins)
 - PDF page counting functionality using pypdf library
-- `build_resume_with_optimization()` function for Python API
+- `one_page` parameter to existing `build_resume()` function for Python API
 - Comprehensive documentation for optimization feature
 - 19 new tests covering optimization scenarios with 96% overall coverage
 
@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated README with detailed optimization documentation and usage examples
 - Improved template renderer to support optimization parameters
 - Refactored template rendering for better maintainability
+- Simplified API by adding `one_page` parameter to `build_resume()` instead of separate function
 
 ### Technical
 - Added pypdf>=4.0.0 dependency for PDF analysis

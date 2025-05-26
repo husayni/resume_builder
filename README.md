@@ -78,7 +78,7 @@ yaml-resume-builder build --input my_resume.yml --output resume.pdf --debug
 ### Python API
 
 ```python
-from yaml_resume_builder import build_resume, build_resume_with_optimization
+from yaml_resume_builder import build_resume
 
 # Build a resume from a YAML file
 build_resume(
@@ -87,7 +87,7 @@ build_resume(
 )
 
 # Build a resume optimized to fit on one page
-build_resume_with_optimization(
+build_resume(
     input_path="my_resume.yml",
     output_path="resume.pdf",
     one_page=True
@@ -98,6 +98,14 @@ build_resume(
     input_path="my_resume.yml",
     output_path="resume.pdf",
     debug=True
+)
+
+# Build with both one-page optimization and debug mode
+build_resume(
+    input_path="my_resume.yml",
+    output_path="resume.pdf",
+    debug=True,
+    one_page=True
 )
 ```
 
@@ -123,8 +131,8 @@ The `--one-page` flag (or `one_page=True` in the Python API) automatically optim
 yaml-resume-builder build -i resume.yml -o resume.pdf --one-page
 
 # Python API usage
-from yaml_resume_builder import build_resume_with_optimization
-build_resume_with_optimization("resume.yml", "resume.pdf", one_page=True)
+from yaml_resume_builder import build_resume
+build_resume("resume.yml", "resume.pdf", one_page=True)
 ```
 
 ### Professional Standards

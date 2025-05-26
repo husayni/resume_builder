@@ -7,7 +7,7 @@ import os
 import shutil
 import subprocess
 import tempfile
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import yaml
 from pypdf import PdfReader
@@ -118,36 +118,19 @@ def count_pdf_pages(pdf_path: str) -> int:
         raise Exception(f"Error reading PDF file: {e}") from e
 
 
-def build_resume_with_optimization(
-    input_path: str, output_path: str, one_page: bool = False, debug: bool = False
-) -> str:
-    """Build a resume from a YAML file with optional one-page optimization.
+def _try_one_page_optimization(
+    resume_data: dict, output_path: str, debug: bool = False
+) -> Optional[str]:
+    """Try to optimize the resume to fit on one page using progressive optimization levels.
 
     Args:
-        input_path (str): Path to the YAML file.
+        resume_data (dict): The loaded resume data.
         output_path (str): Path to save the generated PDF.
-        one_page (bool): Whether to optimize the resume to fit on one page.
         debug (bool): Whether to save the intermediate .tex file alongside the PDF.
 
     Returns:
-        str: Path to the generated PDF file.
-
-    Raises:
-        FileNotFoundError: If the input file does not exist.
-        yaml.YAMLError: If the YAML file is invalid.
-        subprocess.CalledProcessError: If the LaTeX compilation fails.
+        str: Path to the generated PDF file if successful, None if optimization failed.
     """
-    if not one_page:
-        return build_resume(input_path, output_path, debug)
-
-    # Check if input file exists
-    if not os.path.exists(input_path):
-        raise FileNotFoundError(f"Input file not found: {input_path}")
-
-    # Load YAML data
-    resume_data = load_yaml(input_path)
-
-    # Try different optimization levels until we get one page
     optimization_levels = [
         {"font_size": "11pt", "margin_reduction": 0, "spacing_factor": 1.0},
         {"font_size": "11pt", "margin_reduction": 0, "spacing_factor": 0.8},
@@ -204,18 +187,20 @@ def build_resume_with_optimization(
                 print(f"Compilation failed at optimization level {level}, trying next level...")
                 continue
 
-    # If all optimization levels fail, fall back to regular build
-    print("Warning: Could not optimize resume to fit on one page. Building with default settings.")
-    return build_resume(input_path, output_path, debug)
+    # If all optimization levels fail, return None
+    return None
 
 
-def build_resume(input_path: str, output_path: str, debug: bool = False) -> str:
+def build_resume(
+    input_path: str, output_path: str, debug: bool = False, one_page: bool = False
+) -> str:
     """Build a resume from a YAML file.
 
     Args:
         input_path (str): Path to the YAML file.
         output_path (str): Path to save the generated PDF.
         debug (bool): Whether to save the intermediate .tex file alongside the PDF.
+        one_page (bool): Whether to optimize the resume to fit on one page.
 
     Returns:
         str: Path to the generated PDF file.
@@ -232,7 +217,17 @@ def build_resume(input_path: str, output_path: str, debug: bool = False) -> str:
     # Load YAML data
     resume_data = load_yaml(input_path)
 
-    # Create a temporary directory for LaTeX compilation
+    # If one-page optimization is requested, try progressive optimization
+    if one_page:
+        result = _try_one_page_optimization(resume_data, output_path, debug)
+        if result:
+            return result
+        # If optimization fails, fall back to regular build
+        print(
+            "Warning: Could not optimize resume to fit on one page. Building with default settings."
+        )
+
+    # Regular build (or fallback from failed optimization)
     with tempfile.TemporaryDirectory() as temp_dir:
         # Render the template
         tex_content = render_template(resume_data)

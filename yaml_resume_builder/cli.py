@@ -9,7 +9,7 @@ import sys
 
 import click
 
-from yaml_resume_builder.builder import build_resume, build_resume_with_optimization
+from yaml_resume_builder.builder import build_resume
 
 
 @click.group()
@@ -58,10 +58,7 @@ def build(input: str, output: str, debug: bool, one_page: bool) -> None:
         one_page (bool): Whether to optimize the resume to fit on one page.
     """
     try:
-        if one_page:
-            output_path = build_resume_with_optimization(input, output, one_page=True, debug=debug)
-        else:
-            output_path = build_resume(input, output, debug=debug)
+        output_path = build_resume(input, output, debug=debug, one_page=one_page)
 
         click.echo(f"Resume successfully built and saved to: {output_path}")
 
