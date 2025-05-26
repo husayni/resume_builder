@@ -239,6 +239,119 @@ def test_render_template_with_projects_technologies_and_dates() -> None:
     assert "Created a legacy project" in rendered
 
 
+def test_render_template_with_projects_technologies_array() -> None:
+    """Test rendering a template with projects that have technologies as arrays."""
+    # Test data with projects including technologies as arrays (new format)
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [
+            {
+                "name": "Gitlytics",
+                "technologies": ["Python", "Flask", "React", "PostgreSQL", "Docker"],
+                "date": "June 2020 - Present",
+                "link": "https://github.com/testuser/gitlytics",
+                "description": [
+                    "Developed a full-stack web application",
+                    "Implemented GitHub OAuth",
+                    "Visualized GitHub data to show collaboration",
+                ],
+            },
+            {
+                "name": "Simple Paintball",
+                "technologies": ["Spigot API", "Java", "Maven", "TravisCI", "Git"],
+                "date": "May 2018 - May 2020",
+                "link": "",
+                "description": [
+                    "Developed a Minecraft server plugin",
+                    "Published plugin gaining 2K+ downloads",
+                ],
+            },
+            {
+                "name": "Mixed Format Project",  # Test with string format for backward compatibility
+                "technologies": "Node.js, Express, MongoDB",
+                "date": "2023",
+                "description": [
+                    "Built a REST API",
+                ],
+            },
+        ],
+        "skills": [],
+    }
+
+    # Render the template
+    rendered = render_template(data)
+
+    # Check that the projects data is correctly inserted
+    assert "Gitlytics" in rendered
+    assert "Python, Flask, React, PostgreSQL, Docker" in rendered
+    assert "June 2020 - Present" in rendered
+    assert "Developed a full-stack web application" in rendered
+
+    assert "Simple Paintball" in rendered
+    assert "Spigot API, Java, Maven, TravisCI, Git" in rendered
+    assert "May 2018 - May 2020" in rendered
+    assert "Developed a Minecraft server plugin" in rendered
+
+    # Check that mixed format (string) still works
+    assert "Mixed Format Project" in rendered
+    assert "Node.js, Express, MongoDB" in rendered
+    assert "Built a REST API" in rendered
+
+
+def test_render_template_with_projects_edge_cases() -> None:
+    """Test rendering a template with edge cases for project technologies."""
+    # Test data with edge cases for technologies
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [
+            {
+                "name": "Empty Array Project",
+                "technologies": [],  # Empty array
+                "date": "2023",
+                "description": ["Built something"],
+            },
+            {
+                "name": "Single Tech Project",
+                "technologies": ["Python"],  # Single item array
+                "date": "2023",
+                "description": ["Built with Python"],
+            },
+            {
+                "name": "No Tech Project",
+                # No technologies field
+                "date": "2023",
+                "description": ["Built without tech info"],
+            },
+        ],
+        "skills": [],
+    }
+
+    # Render the template
+    rendered = render_template(data)
+
+    # Check that projects are rendered correctly
+    assert "Empty Array Project" in rendered
+    assert "Single Tech Project" in rendered
+    assert "Python" in rendered  # Single technology should appear
+    assert "No Tech Project" in rendered
+
+
 def test_render_template_with_extra_fields(caplog: LogCaptureFixture) -> None:
     """Test rendering a template with extra fields in the YAML data."""
     import logging

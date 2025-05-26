@@ -4,7 +4,7 @@ This module contains functionality for rendering LaTeX templates.
 """
 
 import logging
-from typing import Any, Dict, List, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -262,7 +262,14 @@ def _build_projects_section(data: Dict[str, Any]) -> str:
 
         # Add technologies if available
         if "technologies" in project and project["technologies"]:
-            project_title += r" $|$ \emph{" + escape_latex(project["technologies"]) + r"}"
+            # Handle both list and string formats for technologies
+            if isinstance(project["technologies"], list):
+                technologies_str = ", ".join(project["technologies"])
+            else:
+                technologies_str = str(project["technologies"])
+            # Only add technologies if the string is not empty
+            if technologies_str.strip():
+                project_title += r" $|$ \emph{" + escape_latex(technologies_str) + r"}"
         # Otherwise use link if available (for backward compatibility)
         elif "link" in project and project["link"]:
             project_title += r" $|$ \emph{" + escape_latex(project["link"]) + r"}"
@@ -346,53 +353,136 @@ def _format_certification_item(certification: str) -> str:
     return r"    \resumeItem{" + escape_latex(certification) + r"}" + "\n"
 
 
-def _build_achievements_publications_section(data: Dict[str, Any]) -> str:
-    """Build the achievements, publications, and certifications section of the resume.
+def _build_publications_section(data: Dict[str, Any]) -> str:
+    """Build the publications section of the resume.
 
     Args:
         data (dict): The resume data.
 
     Returns:
-        str: The formatted achievements, publications, and certifications section.
-        Returns an empty string if all sections are empty.
+        str: The formatted publications section.
+        Returns an empty string if no publications are available.
     """
-    # Check if any of the sections have content
-    has_achievements = "achievements" in data and data["achievements"]
-    has_publications = "publications" in data and data["publications"]
-    has_certifications = "certifications" in data and data["certifications"]
-
-    # If all are empty, return an empty string
-    if not has_achievements and not has_publications and not has_certifications:
+    if "publications" not in data or not data["publications"]:
         return ""
 
     section = r"\resumeItemListStart" + "\n"
-
-    # Add achievements if available
-    if has_achievements:
-        for achievement in data["achievements"]:
-            section += _format_achievement_item(achievement)
-
-    # Add publications if available
-    if has_publications:
-        for publication in data["publications"]:
-            section += _format_publication_item(publication)
-
-    # Add certifications if available
-    if has_certifications:
-        for certification in data["certifications"]:
-            section += _format_certification_item(certification)
-
-    # End the item list
+    for publication in data["publications"]:
+        section += _format_publication_item(publication)
     section += r"  \resumeItemListEnd" + "\n"
-
     return section
 
 
-def render_template(data: Dict[str, Any]) -> str:
+def _build_certifications_section(data: Dict[str, Any]) -> str:
+    """Build the certifications section of the resume.
+
+    Args:
+        data (dict): The resume data.
+
+    Returns:
+        str: The formatted certifications section.
+        Returns an empty string if no certifications are available.
+    """
+    if "certifications" not in data or not data["certifications"]:
+        return ""
+
+    section = r"\resumeItemListStart" + "\n"
+    for certification in data["certifications"]:
+        section += _format_certification_item(certification)
+    section += r"  \resumeItemListEnd" + "\n"
+    return section
+
+
+def _build_achievements_section(data: Dict[str, Any]) -> str:
+    """Build the achievements section of the resume.
+
+    Args:
+        data (dict): The resume data.
+
+    Returns:
+        str: The formatted achievements section.
+        Returns an empty string if no achievements are available.
+    """
+    if "achievements" not in data or not data["achievements"]:
+        return ""
+
+    section = r"\resumeItemListStart" + "\n"
+    for achievement in data["achievements"]:
+        section += _format_achievement_item(achievement)
+    section += r"  \resumeItemListEnd" + "\n"
+    return section
+
+
+def _apply_optimization_params(template_content: str, optimization_params: Dict[str, Any]) -> str:
+    """Apply optimization parameters to the LaTeX template.
+
+    Args:
+        template_content (str): The original template content.
+        optimization_params (dict): Parameters for optimization.
+
+    Returns:
+        str: The optimized template content.
+    """
+    # Apply font size changes
+    font_size = optimization_params.get("font_size", "11pt")
+    template_content = template_content.replace(
+        r"\documentclass[letterpaper,11pt]{article}",
+        f"\\documentclass[letterpaper,{font_size}]{{article}}",
+    )
+
+    # Apply margin adjustments
+    margin_reduction = optimization_params.get("margin_reduction", 0)
+    if margin_reduction > 0:
+        # Reduce margins by the specified amount
+        base_margin = 0.5
+        new_margin = base_margin - margin_reduction
+        template_content = template_content.replace(
+            r"\addtolength{\oddsidemargin}{-0.5in}",
+            f"\\addtolength{{\\oddsidemargin}}{{{-new_margin}in}}",
+        )
+        template_content = template_content.replace(
+            r"\addtolength{\evensidemargin}{-0.5in}",
+            f"\\addtolength{{\\evensidemargin}}{{{-new_margin}in}}",
+        )
+        template_content = template_content.replace(
+            r"\addtolength{\topmargin}{-.5in}", f"\\addtolength{{\\topmargin}}{{{-new_margin}in}}"
+        )
+
+    # Apply spacing factor adjustments
+    spacing_factor = optimization_params.get("spacing_factor", 1.0)
+    if spacing_factor < 1.0:
+        # Reduce various spacing elements
+        # Section spacing
+        template_content = template_content.replace(
+            r"\vspace{-4pt}", f"\\vspace{{{int(-4 * spacing_factor)}pt}}"
+        )
+        template_content = template_content.replace(
+            r"\vspace{-5pt}", f"\\vspace{{{int(-5 * spacing_factor)}pt}}"
+        )
+        template_content = template_content.replace(
+            r"\vspace{-2pt}", f"\\vspace{{{int(-2 * spacing_factor)}pt}}"
+        )
+        template_content = template_content.replace(
+            r"\vspace{-7pt}", f"\\vspace{{{int(-7 * spacing_factor)}pt}}"
+        )
+
+        # Add additional spacing reduction for very aggressive optimization
+        if spacing_factor <= 0.7:
+            # Add extra spacing reductions
+            template_content = template_content.replace(r"\vspace{1pt}", "\\vspace{0pt}")
+
+    return template_content
+
+
+def render_template(
+    data: Dict[str, Any], optimization_params: Optional[Dict[str, Any]] = None
+) -> str:
     """Render a LaTeX template with the given data.
 
     Args:
         data (dict): Data to render the template with.
+        optimization_params (dict, optional): Parameters for optimizing the template for one page.
+            Expected keys: font_size, margin_reduction, spacing_factor
 
     Returns:
         str: The rendered LaTeX content.
@@ -406,6 +496,10 @@ def render_template(data: Dict[str, Any]) -> str:
     resume_template_path = os.path.join(os.path.dirname(__file__), "resume.tex.template")
     with open(resume_template_path, "r") as file:
         template_content = file.read()
+
+    # Apply optimization parameters if provided
+    if optimization_params:
+        template_content = _apply_optimization_params(template_content, optimization_params)
 
     # Replace name
     template_content = template_content.replace("{{name}}", escape_latex(data["name"]))
@@ -424,29 +518,85 @@ def render_template(data: Dict[str, Any]) -> str:
     template_content = template_content.replace("{{education}}", _build_education_section(data))
     template_content = template_content.replace("{{experience}}", _build_experience_section(data))
     template_content = template_content.replace("{{projects}}", _build_projects_section(data))
+
+    # Handle optional sections
+    template_content = _handle_optional_sections(template_content, data)
+
+    return template_content
+
+
+def _handle_optional_sections(template_content: str, data: Dict[str, Any]) -> str:
+    """Handle optional sections that may be empty and need to be removed.
+
+    Args:
+        template_content (str): The template content.
+        data (dict): The resume data.
+
+    Returns:
+        str: The template content with optional sections handled.
+    """
+    # Handle publications section
+    publications_content = _build_publications_section(data)
+    template_content = _handle_section(
+        template_content,
+        publications_content,
+        "{{publications}}",
+        "%-----------Publications-----------",
+        "%-------------------------------------------",
+    )
+
     template_content = template_content.replace("{{skills}}", _build_skills_section(data))
 
-    # Build achievements and publications section
-    achievements_publications_content = _build_achievements_publications_section(data)
+    # Handle certifications section
+    certifications_content = _build_certifications_section(data)
+    template_content = _handle_section(
+        template_content,
+        certifications_content,
+        "{{certifications}}",
+        "%-----------Certifications-----------",
+        "%-------------------------------------------",
+    )
 
-    # If the section is empty, remove the entire section from the template
-    if not achievements_publications_content:
-        # Remove the section from the template using string replacement
-        # Find the section in the template
-        section_start = "%-----------Achievements / Publications / Certifications-----------"
-        section_end = "%-------------------------------------------"
+    # Handle achievements section
+    achievements_content = _build_achievements_section(data)
+    template_content = _handle_section(
+        template_content,
+        achievements_content,
+        "{{achievements}}",
+        "%-----------Achievements-----------",
+        "%-------------------------------------------",
+    )
 
-        # Find the start and end positions of the section
+    return template_content
+
+
+def _handle_section(
+    template_content: str,
+    section_content: str,
+    placeholder: str,
+    section_start: str,
+    section_end: str,
+) -> str:
+    """Handle a section that may be empty and need to be removed.
+
+    Args:
+        template_content (str): The template content.
+        section_content (str): The content for the section.
+        placeholder (str): The placeholder to replace.
+        section_start (str): The start marker for the section.
+        section_end (str): The end marker for the section.
+
+    Returns:
+        str: The template content with the section handled.
+    """
+    if not section_content:
+        # Remove the section from the template
         start_pos = template_content.find(section_start)
-        end_pos = template_content.find(section_end, start_pos) + len(section_end)
-
-        if start_pos != -1 and end_pos != -1:
-            # Remove the section
-            template_content = template_content[:start_pos] + template_content[end_pos + 1 :]
+        if start_pos != -1:
+            end_pos = template_content.find(section_end, start_pos) + len(section_end)
+            if end_pos != -1:
+                template_content = template_content[:start_pos] + template_content[end_pos + 1 :]
     else:
-        # Otherwise, replace the placeholder with the content
-        template_content = template_content.replace(
-            "{{achievements_publications}}", achievements_publications_content
-        )
+        template_content = template_content.replace(placeholder, section_content)
 
     return template_content

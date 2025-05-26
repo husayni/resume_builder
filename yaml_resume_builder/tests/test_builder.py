@@ -8,7 +8,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 
-from yaml_resume_builder.builder import build_resume, compile_latex, load_yaml
+from yaml_resume_builder.builder import (
+    build_resume,
+    build_resume_with_optimization,
+    compile_latex,
+    count_pdf_pages,
+    load_yaml,
+)
 
 
 def test_load_yaml() -> None:
@@ -436,3 +442,228 @@ def test_build_resume_input_not_found() -> None:
     """Test building a resume with a non-existent input file."""
     with pytest.raises(FileNotFoundError):
         build_resume("non_existent_file.yml", "output.pdf")
+
+
+def test_count_pdf_pages() -> None:
+    """Test counting pages in a PDF file."""
+    # Create a mock PDF file with known content
+    with tempfile.NamedTemporaryFile(mode="wb", suffix=".pdf", delete=False) as pdf_file:
+        # Create a minimal PDF content (this is a very basic PDF structure)
+        pdf_content = b"""%PDF-1.4
+1 0 obj
+<<
+/Type /Catalog
+/Pages 2 0 R
+>>
+endobj
+2 0 obj
+<<
+/Type /Pages
+/Kids [3 0 R]
+/Count 1
+>>
+endobj
+3 0 obj
+<<
+/Type /Page
+/Parent 2 0 R
+/MediaBox [0 0 612 792]
+>>
+endobj
+xref
+0 4
+0000000000 65535 f
+0000000009 00000 n
+0000000058 00000 n
+0000000115 00000 n
+trailer
+<<
+/Size 4
+/Root 1 0 R
+>>
+startxref
+190
+%%EOF"""
+        pdf_file.write(pdf_content)
+        pdf_path = pdf_file.name
+
+    try:
+        # Test counting pages
+        page_count = count_pdf_pages(pdf_path)
+        assert page_count == 1
+    finally:
+        # Clean up
+        if os.path.exists(pdf_path):
+            os.unlink(pdf_path)
+
+
+def test_count_pdf_pages_file_not_found() -> None:
+    """Test counting pages in a non-existent PDF file."""
+    with pytest.raises(FileNotFoundError):
+        count_pdf_pages("non_existent_file.pdf")
+
+
+@patch("yaml_resume_builder.builder.count_pdf_pages")
+@patch("yaml_resume_builder.builder.compile_latex")
+@patch("yaml_resume_builder.builder.render_template")
+def test_build_resume_with_optimization_one_page(
+    mock_render_template: MagicMock,
+    mock_compile_latex: MagicMock,
+    mock_count_pdf_pages: MagicMock,
+) -> None:
+    """Test building a resume with one-page optimization that succeeds on first try."""
+    # Mock the render_template function
+    mock_render_template.return_value = (
+        "\\documentclass{article}\\begin{document}Test\\end{document}"
+    )
+
+    # Mock the compile_latex function
+    pdf_path = os.path.join(tempfile.gettempdir(), "test.pdf")
+    mock_compile_latex.return_value = pdf_path
+
+    # Mock count_pdf_pages to return 1 (one page)
+    mock_count_pdf_pages.return_value = 1
+
+    # Create temporary files for testing
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
+        yaml_file.write("""
+name: Test User
+contact:
+  phone: 555-123-4567
+  email: test@example.com
+  linkedin: testuser
+  github: testuser
+education: []
+experience: []
+projects: []
+skills: []
+""")
+        yaml_path = yaml_file.name
+        output_path = os.path.join(tempfile.gettempdir(), "output.pdf")
+
+    try:
+        # Create a mock PDF file
+        with open(pdf_path, "w") as f:
+            f.write("Mock PDF content")
+
+        # Test building the resume with one-page optimization
+        result = build_resume_with_optimization(yaml_path, output_path, one_page=True)
+
+        # Check that the returned path is correct
+        assert result == output_path
+
+        # Verify that render_template was called with optimization parameters
+        mock_render_template.assert_called_once()
+        _, kwargs = mock_render_template.call_args
+        assert "optimization_params" in kwargs
+        assert kwargs["optimization_params"]["font_size"] == "11pt"
+
+        # Verify that count_pdf_pages was called
+        mock_count_pdf_pages.assert_called_once_with(pdf_path)
+
+        # Clean up the mock PDF
+        if os.path.exists(pdf_path):
+            os.unlink(pdf_path)
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(yaml_path):
+            os.unlink(yaml_path)
+
+
+@patch("yaml_resume_builder.builder.count_pdf_pages")
+@patch("yaml_resume_builder.builder.compile_latex")
+@patch("yaml_resume_builder.builder.render_template")
+def test_build_resume_with_optimization_fallback(
+    mock_render_template: MagicMock,
+    mock_compile_latex: MagicMock,
+    mock_count_pdf_pages: MagicMock,
+) -> None:
+    """Test building a resume with one-page optimization that falls back to regular build."""
+    # Mock the render_template function
+    mock_render_template.return_value = (
+        "\\documentclass{article}\\begin{document}Test\\end{document}"
+    )
+
+    # Mock the compile_latex function
+    pdf_path = os.path.join(tempfile.gettempdir(), "test.pdf")
+    mock_compile_latex.return_value = pdf_path
+
+    # Mock count_pdf_pages to always return 2 (more than one page)
+    mock_count_pdf_pages.return_value = 2
+
+    # Create temporary files for testing
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
+        yaml_file.write("""
+name: Test User
+contact:
+  phone: 555-123-4567
+  email: test@example.com
+  linkedin: testuser
+  github: testuser
+education: []
+experience: []
+projects: []
+skills: []
+""")
+        yaml_path = yaml_file.name
+        output_path = os.path.join(tempfile.gettempdir(), "output.pdf")
+
+    try:
+        # Create a mock PDF file
+        with open(pdf_path, "w") as f:
+            f.write("Mock PDF content")
+
+        # Test building the resume with one-page optimization
+        result = build_resume_with_optimization(yaml_path, output_path, one_page=True)
+
+        # Check that the returned path is correct
+        assert result == output_path
+
+        # Verify that render_template was called multiple times (for different optimization levels)
+        assert mock_render_template.call_count >= 5  # Should try all optimization levels
+
+        # Clean up the mock PDF
+        if os.path.exists(pdf_path):
+            os.unlink(pdf_path)
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(yaml_path):
+            os.unlink(yaml_path)
+
+
+def test_build_resume_with_optimization_disabled() -> None:
+    """Test that build_resume_with_optimization calls regular build_resume when one_page=False."""
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
+        yaml_file.write("""
+name: Test User
+contact:
+  phone: 555-123-4567
+  email: test@example.com
+  linkedin: testuser
+  github: testuser
+education: []
+experience: []
+projects: []
+skills: []
+""")
+        yaml_path = yaml_file.name
+        output_path = os.path.join(tempfile.gettempdir(), "output.pdf")
+
+    try:
+        with patch("yaml_resume_builder.builder.build_resume") as mock_build_resume:
+            mock_build_resume.return_value = output_path
+
+            # Test building the resume with one_page=False
+            result = build_resume_with_optimization(yaml_path, output_path, one_page=False)
+
+            # Verify that build_resume was called
+            mock_build_resume.assert_called_once_with(yaml_path, output_path, False)
+            assert result == output_path
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(yaml_path):
+            os.unlink(yaml_path)

@@ -9,7 +9,7 @@ import sys
 
 import click
 
-from yaml_resume_builder.builder import build_resume
+from yaml_resume_builder.builder import build_resume, build_resume_with_optimization
 
 
 @click.group()
@@ -42,16 +42,27 @@ def cli() -> None:
     is_flag=True,
     help="Enable debug mode to save the intermediate .tex file alongside the PDF.",
 )
-def build(input: str, output: str, debug: bool) -> None:
+@click.option(
+    "--one-page",
+    "-1",
+    is_flag=True,
+    help="Optimize the resume to fit on one page by adjusting font size, margins, and spacing.",
+)
+def build(input: str, output: str, debug: bool, one_page: bool) -> None:
     """Build a resume from a YAML file.
 
     Args:
         input (str): Path to the input YAML file.
         output (str): Path to save the output PDF file.
         debug (bool): Whether to save the intermediate .tex file.
+        one_page (bool): Whether to optimize the resume to fit on one page.
     """
     try:
-        output_path = build_resume(input, output, debug=debug)
+        if one_page:
+            output_path = build_resume_with_optimization(input, output, one_page=True, debug=debug)
+        else:
+            output_path = build_resume(input, output, debug=debug)
+
         click.echo(f"Resume successfully built and saved to: {output_path}")
 
         if debug:

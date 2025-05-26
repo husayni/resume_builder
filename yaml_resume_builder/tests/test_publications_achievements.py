@@ -142,7 +142,7 @@ def test_render_template_with_only_achievements() -> None:
     rendered = render_template(data)
 
     # Check that the achievements section is present
-    assert "Achievements \\& Publications" in rendered
+    assert "\\section{Achievements}" in rendered
     assert "Achievement Title at Organization (2023)" in rendered
     assert "\\resumeItemListStart" in rendered
     assert "\\resumeItemListEnd" in rendered
@@ -174,7 +174,7 @@ def test_render_template_with_only_publications() -> None:
     rendered = render_template(data)
 
     # Check that the publications section is present
-    assert "Achievements \\& Publications" in rendered
+    assert "\\section{Publications}" in rendered
     assert "Publication Title, Journal Name, 2023" in rendered
     assert "\\resumeItemListStart" in rendered
     assert "\\resumeItemListEnd" in rendered
@@ -207,7 +207,7 @@ def test_render_template_with_only_certifications() -> None:
     rendered = render_template(data)
 
     # Check that the certifications section is present
-    assert "Achievements \\& Publications" in rendered
+    assert "\\section{Certifications}" in rendered
     assert "AWS Certified Developer - Associate (2023)" in rendered
     assert "Google Cloud Certified - Associate Cloud Engineer (2022)" in rendered
     assert "\\resumeItemListStart" in rendered

@@ -103,6 +103,11 @@
       {{projects}}
     \resumeSubHeadingListEnd
 
+%-----------Publications-----------
+\section{Publications}
+  {{publications}}
+%-------------------------------------------
+
 \section{Technical Skills}
  \begin{itemize}[leftmargin=0.15in, label={}]
     \small{\item{
@@ -110,9 +115,14 @@
     }}
  \end{itemize}
 
-%-----------Achievements / Publications / Certifications-----------
-\section{Achievements \& Publications}
-  {{achievements_publications}}
+%-----------Certifications-----------
+\section{Certifications}
+  {{certifications}}
+%-------------------------------------------
+
+%-----------Achievements-----------
+\section{Achievements}
+  {{achievements}}
 %-------------------------------------------
 
 \end{document}

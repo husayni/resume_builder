@@ -67,19 +67,73 @@ yaml-resume-builder init --output my_resume.yml
 
 # Build a resume from a YAML file
 yaml-resume-builder build --input my_resume.yml --output resume.pdf
+
+# Build a resume optimized to fit on one page
+yaml-resume-builder build --input my_resume.yml --output resume.pdf --one-page
+
+# Build with debug mode to save the intermediate LaTeX file
+yaml-resume-builder build --input my_resume.yml --output resume.pdf --debug
 ```
 
 ### Python API
 
 ```python
-from yaml_resume_builder import build_resume
+from yaml_resume_builder import build_resume, build_resume_with_optimization
 
 # Build a resume from a YAML file
 build_resume(
     input_path="my_resume.yml",
     output_path="resume.pdf"
 )
+
+# Build a resume optimized to fit on one page
+build_resume_with_optimization(
+    input_path="my_resume.yml",
+    output_path="resume.pdf",
+    one_page=True
+)
+
+# Build with debug mode enabled
+build_resume(
+    input_path="my_resume.yml",
+    output_path="resume.pdf",
+    debug=True
+)
 ```
+
+## One-Page Optimization
+
+The `--one-page` flag (or `one_page=True` in the Python API) automatically optimizes your resume to fit on a single page. This feature uses progressive optimization techniques:
+
+### How It Works
+
+1. **PDF Analysis**: After generating the initial PDF, the tool counts the number of pages
+2. **Progressive Optimization**: If the resume exceeds one page, it applies optimization levels in order:
+   - **Level 1**: Reduce section spacing
+   - **Level 2**: Reduce font size from 11pt to 10pt
+   - **Level 3**: Reduce margins slightly
+   - **Level 4**: Further reduce line spacing and item spacing
+   - **Level 5**: Apply aggressive spacing reductions
+3. **Automatic Fallback**: If optimization fails, it falls back to the regular build
+
+### Usage Examples
+
+```bash
+# CLI usage
+yaml-resume-builder build -i resume.yml -o resume.pdf --one-page
+
+# Python API usage
+from yaml_resume_builder import build_resume_with_optimization
+build_resume_with_optimization("resume.yml", "resume.pdf", one_page=True)
+```
+
+### Professional Standards
+
+The optimization maintains professional standards by:
+- Keeping font sizes within readable ranges (10pt-11pt)
+- Maintaining appropriate margins (minimum 0.35in)
+- Preserving content hierarchy and readability
+- Only applying changes that improve space efficiency
 
 ## YAML Format
 
