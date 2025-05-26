@@ -181,7 +181,7 @@ experience:
 
 projects:
   - name: Gitlytics
-    technologies: Python, Flask, React, PostgreSQL, Docker
+    technologies: [Python, Flask, React, PostgreSQL, Docker]
     date: June 2020 - Present
     link: https://github.com/yourusername/gitlytics
     description:
@@ -191,7 +191,7 @@ projects:
       - "Used Celery and Redis for asynchronous tasks"
 
   - name: Simple Paintball
-    technologies: Spigot API, Java, Maven, TravisCI, Git
+    technologies: [Spigot API, Java, Maven, TravisCI, Git]
     date: May 2018 - May 2020
     link: https://github.com/yourusername/simple-paintball
     description:

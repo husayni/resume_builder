@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-05-26
+
+### Added
+- One-page resume optimization feature with `--one-page` CLI flag
+- Progressive optimization with 5 levels (spacing, font size, margins)
+- PDF page counting functionality using pypdf library
+- `build_resume_with_optimization()` function for Python API
+- Comprehensive documentation for optimization feature
+- 19 new tests covering optimization scenarios with 96% overall coverage
+
+### Changed
+- Enhanced CLI with new `--one-page` / `-1` flag for automatic optimization
+- Updated README with detailed optimization documentation and usage examples
+- Improved template renderer to support optimization parameters
+- Refactored template rendering for better maintainability
+
+### Technical
+- Added pypdf>=4.0.0 dependency for PDF analysis
+- Maintains professional formatting standards with graceful fallback
+- Automatic optimization attempts with clear progress feedback
+
 ## [1.0.5] - 2025-05-21
 
 ### Fixed
