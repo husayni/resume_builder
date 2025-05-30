@@ -144,11 +144,21 @@ def _validate_publications(data: Dict[str, Any]) -> None:
 
 
 def _validate_certifications(data: Dict[str, Any]) -> None:
-    """Validate certifications section (simple strings)."""
-    if "certifications" in data and isinstance(data["certifications"], list):
-        for i, certification in enumerate(data["certifications"]):
-            if not isinstance(certification, str):
-                logger.warning(f"Certification at index {i} should be a string")
+    """Validate certifications section (support both string and dict formats)."""
+    if "certifications" not in data or not isinstance(data["certifications"], list):
+        return
+    for i, certification in enumerate(data["certifications"]):
+        if isinstance(certification, dict):
+            # New format: validate known fields
+            known_fields = {"name", "link"}
+            for field in certification:
+                if field not in known_fields:
+                    logger.warning(f"Unknown field '{field}' in certification entry")
+            # Ensure 'name' field is present
+            if "name" not in certification:
+                logger.warning(f"Certification at index {i} is missing required 'name' field")
+        elif not isinstance(certification, str):
+            logger.warning(f"Certification at index {i} should be a string or dict")
 
 
 def validate_data(data: Dict[str, Any]) -> None:
@@ -280,7 +290,7 @@ def _build_projects_section(data: Dict[str, Any]) -> str:
         else:
             project_title += r"}{}"
 
-        projects_section += r"  " + project_title + "\n"
+        projects_section += f"  {project_title}" + "\n"
         projects_section += r"  \resumeItemListStart" + "\n"
         # Handle both 'description' (new format) and 'bullets' (old format for backward compatibility)
         descriptions = project.get("description", project.get("bullets", []))
@@ -348,9 +358,40 @@ def _format_publication_item(publication: Union[str, Dict[str, Any]]) -> str:
     return ""
 
 
-def _format_certification_item(certification: str) -> str:
-    """Format a single certification item."""
-    return r"    \resumeItem{" + escape_latex(certification) + r"}" + "\n"
+def _format_certification_item(certification: Union[str, Dict[str, Any]]) -> str:
+    """Format a single certification item.
+
+    Args:
+        certification: Either a string (old format) or dict with 'name' and optional 'link' (new format)
+
+    Returns:
+        str: Formatted LaTeX certification item
+    """
+    if isinstance(certification, str):
+        # Old format: simple string
+        return r"    \resumeItem{" + escape_latex(certification) + r"}" + "\n"
+    elif isinstance(certification, dict):
+        # New format: dict with name and optional link
+        name = certification.get("name", "")
+        link = certification.get("link", "")
+
+        if not link:
+            # Format without hyperlink
+            return r"    \resumeItem{" + escape_latex(name) + r"}" + "\n"
+        # Format with hyperlink
+        escaped_name = escape_latex(name)
+        escaped_link = escape_latex(link)
+        return (
+            r"    \resumeItem{\href{"
+            + escaped_link
+            + r"}{\underline{"
+            + escaped_name
+            + r"}}}"
+            + "\n"
+        )
+    else:
+        # Fallback for unexpected types
+        return r"    \resumeItem{" + escape_latex(str(certification)) + r"}" + "\n"
 
 
 def _build_publications_section(data: Dict[str, Any]) -> str:

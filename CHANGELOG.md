@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2025-05-30
+
+### Added
+- **Certification Links Feature**: Certifications now support optional clickable links
+  - Backward compatible with existing string format
+  - Generates LaTeX `\href{url}{\underline{name}}` for linked certifications
+  - Mixed format support (string and dict in same YAML file)
+- Enhanced LaTeX special character escaping for URLs and certification names
+
+### Changed
+- Updated sample YAML file to demonstrate new certification link format
+
 ## [1.1.0.1] - 2025-05-26
 
 ### Fixed

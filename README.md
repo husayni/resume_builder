@@ -143,6 +143,45 @@ The optimization maintains professional standards by:
 - Preserving content hierarchy and readability
 - Only applying changes that improve space efficiency
 
+## Certification Links (New in v1.1.1)
+
+Certifications now support optional clickable links! You can use either the traditional string format or the new dictionary format with optional links.
+
+### Format Options
+
+**New Dictionary Format (with optional links):**
+```yaml
+certifications:
+  - name: AWS Certified Developer - Associate (2023)
+    link: https://www.credly.com/badges/your-badge-id
+  - name: Google Cloud Certified - Associate Cloud Engineer (2022)  # No link
+```
+
+**Traditional String Format (still supported):**
+```yaml
+certifications:
+  - "Microsoft Certified: Azure AI Engineer Associate"
+  - "AWS Certified Developer - Associate (2023)"
+```
+
+**Mixed Format (both in same file):**
+```yaml
+certifications:
+  - name: AWS Certified Developer - Associate (2023)
+    link: https://www.credly.com/badges/your-badge-id
+  - "Microsoft Certified: Azure AI Engineer Associate"
+  - name: Kubernetes Certified Application Developer
+    link: https://www.cncf.io/certification/ckad/
+```
+
+### How It Works
+
+- **With Link**: Generates clickable, underlined certification names in the PDF
+- **Without Link**: Displays as regular text (same as traditional format)
+- **Backward Compatible**: Existing YAML files continue to work unchanged
+- **Validation**: Warns about unknown fields but continues processing
+- **Special Characters**: Properly escapes LaTeX special characters in URLs and names
+
 ## YAML Format
 
 The YAML file should have the following structure. Any unknown fields will be ignored with a warning message:
@@ -227,8 +266,14 @@ publications:
   - Machine Learning Applications in DevOps Pipelines, International Conference on DevOps, June 2022
 
 certifications:
-  - AWS Certified Developer - Associate (2023)
-  - Google Cloud Certified - Associate Cloud Engineer (2022)
+  # New format with optional links (v1.1.1+)
+  - name: AWS Certified Developer - Associate (2023)
+    link: https://www.credly.com/badges/your-badge-id
+  - name: Google Cloud Certified - Associate Cloud Engineer (2022)
+  # Traditional string format (still supported)
+  - "Microsoft Certified: Azure AI Engineer Associate"
+  - name: Kubernetes Certified Application Developer
+    link: https://www.cncf.io/certification/ckad/
 ```
 
 ## Development

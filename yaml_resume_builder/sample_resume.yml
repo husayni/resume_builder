@@ -75,5 +75,9 @@ publications:
   - Machine Learning Applications in DevOps Pipelines, International Conference on DevOps, June 2022
 
 certifications:
-  - AWS Certified Developer - Associate (2023)
-  - Google Cloud Certified - Associate Cloud Engineer (2022)
+  - name: AWS Certified Developer - Associate (2023)
+    link: https://www.credly.com/badges/your-badge-id
+  - name: Google Cloud Certified - Associate Cloud Engineer (2022)
+  - "Microsoft Certified: Azure AI Engineer Associate"
+  - name: Kubernetes Certified Application Developer
+    link: https://www.cncf.io/certification/ckad/
