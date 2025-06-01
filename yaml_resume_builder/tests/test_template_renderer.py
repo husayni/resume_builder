@@ -473,6 +473,58 @@ def test_render_template_with_skills() -> None:
     assert "React, Django, Spring" in rendered
 
 
+def test_render_template_with_optimization_params() -> None:
+    """Test rendering a template with optimization parameters."""
+    # Test data
+    data = {
+        "name": "Test User",
+        "contact": {
+            "phone": "555-123-4567",
+            "email": "test@example.com",
+            "linkedin": "testuser",
+            "github": "testuser",
+        },
+        "education": [],
+        "experience": [],
+        "projects": [],
+        "skills": [],
+    }
+
+    # Test with font optimization enabled
+    optimization_params = {
+        "font_size": "10pt",
+        "margin_reduction": 0.1,
+        "spacing_factor": 0.8,
+        "use_cormorant_font": True,
+    }
+
+    # Render the template with optimization
+    rendered = render_template(data, optimization_params=optimization_params)
+
+    # Check that optimization parameters are applied
+    assert "\\documentclass[letterpaper,10pt]{article}" in rendered
+    assert "\\usepackage{CormorantGaramond}" in rendered
+    assert "% \\usepackage{CormorantGaramond}" not in rendered
+
+    # Test with font optimization disabled
+    optimization_params_no_font = {
+        "font_size": "11pt",
+        "margin_reduction": 0,
+        "spacing_factor": 1.0,
+        "use_cormorant_font": False,
+    }
+
+    # Render the template without font optimization
+    rendered_no_font = render_template(data, optimization_params=optimization_params_no_font)
+
+    # Check that font is not enabled
+    assert "\\documentclass[letterpaper,11pt]{article}" in rendered_no_font
+    assert "% \\usepackage{CormorantGaramond}" in rendered_no_font
+    assert "\\usepackage{CormorantGaramond}" not in rendered_no_font.replace(
+        "% \\usepackage{CormorantGaramond}", ""
+    )
+
+
 def test_render_template_with_missing_fields() -> None:
     """Test rendering a template with missing fields."""
     # Test data with missing fields

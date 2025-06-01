@@ -117,11 +117,11 @@ The `--one-page` flag (or `one_page=True` in the Python API) automatically optim
 
 1. **PDF Analysis**: After generating the initial PDF, the tool counts the number of pages
 2. **Progressive Optimization**: If the resume exceeds one page, it applies optimization levels in order:
-   - **Level 1**: Reduce section spacing
-   - **Level 2**: Reduce font size from 11pt to 10pt
-   - **Level 3**: Reduce margins slightly
-   - **Level 4**: Further reduce line spacing and item spacing
-   - **Level 5**: Apply aggressive spacing reductions
+   - **Level 1**: Apply improved spacing optimizations (better section spacing, consistent margins)
+   - **Level 2**: Add CormorantGaramond font for more compact text
+   - **Level 3**: Reduce font size from 11pt to 10pt with additional spacing adjustments
+   - **Level 4**: Reduce margins slightly with more aggressive spacing
+   - **Level 5**: Apply maximum spacing reductions and margin adjustments
 3. **Automatic Fallback**: If optimization fails, it falls back to the regular build
 
 ### Usage Examples

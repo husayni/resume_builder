@@ -551,6 +551,7 @@ skills: []
         _, kwargs = mock_render_template.call_args
         assert "optimization_params" in kwargs
         assert kwargs["optimization_params"]["font_size"] == "11pt"
+        assert kwargs["optimization_params"]["use_cormorant_font"] is False
 
         # Verify that count_pdf_pages was called
         mock_count_pdf_pages.assert_called_once_with(pdf_path)
@@ -617,6 +618,79 @@ skills: []
 
         # Verify that render_template was called multiple times (for different optimization levels)
         assert mock_render_template.call_count >= 5  # Should try all optimization levels
+
+        # Clean up the mock PDF
+        if os.path.exists(pdf_path):
+            os.unlink(pdf_path)
+        if os.path.exists(output_path):
+            os.unlink(output_path)
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(yaml_path):
+            os.unlink(yaml_path)
+
+
+@patch("yaml_resume_builder.builder.count_pdf_pages")
+@patch("yaml_resume_builder.builder.compile_latex")
+@patch("yaml_resume_builder.builder.render_template")
+def test_build_resume_one_page_optimization_levels(
+    mock_render_template: MagicMock,
+    mock_compile_latex: MagicMock,
+    mock_count_pdf_pages: MagicMock,
+) -> None:
+    """Test that optimization levels include the correct font parameters."""
+    # Mock the render_template function
+    mock_render_template.return_value = (
+        "\\documentclass{article}\\begin{document}Test\\end{document}"
+    )
+
+    # Mock the compile_latex function
+    pdf_path = os.path.join(tempfile.gettempdir(), "test.pdf")
+    mock_compile_latex.return_value = pdf_path
+
+    # Mock count_pdf_pages to return 2 for first call, then 1 for second call
+    mock_count_pdf_pages.side_effect = [2, 1]  # First level fails, second level succeeds
+
+    # Create temporary files for testing
+    with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as yaml_file:
+        yaml_file.write("""
+name: Test User
+contact:
+  phone: 555-123-4567
+  email: test@example.com
+  linkedin: testuser
+  github: testuser
+education: []
+experience: []
+projects: []
+skills: []
+""")
+        yaml_path = yaml_file.name
+        output_path = os.path.join(tempfile.gettempdir(), "output.pdf")
+
+    try:
+        # Create a mock PDF file
+        with open(pdf_path, "w") as f:
+            f.write("Mock PDF content")
+
+        # Test building the resume with one-page optimization
+        result = build_resume(yaml_path, output_path, one_page=True)
+
+        # Check that the returned path is correct
+        assert result == output_path
+
+        # Verify that render_template was called twice (level 1 and level 2)
+        assert mock_render_template.call_count == 2
+
+        # Check first call (level 1) - should not have font change
+        first_call_kwargs = mock_render_template.call_args_list[0][1]
+        assert "optimization_params" in first_call_kwargs
+        assert first_call_kwargs["optimization_params"]["use_cormorant_font"] is False
+
+        # Check second call (level 2) - should have font change
+        second_call_kwargs = mock_render_template.call_args_list[1][1]
+        assert "optimization_params" in second_call_kwargs
+        assert second_call_kwargs["optimization_params"]["use_cormorant_font"] is True
 
         # Clean up the mock PDF
         if os.path.exists(pdf_path):

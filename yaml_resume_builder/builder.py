@@ -132,11 +132,36 @@ def _try_one_page_optimization(
         str: Path to the generated PDF file if successful, None if optimization failed.
     """
     optimization_levels = [
-        {"font_size": "11pt", "margin_reduction": 0, "spacing_factor": 1.0},
-        {"font_size": "11pt", "margin_reduction": 0, "spacing_factor": 0.8},
-        {"font_size": "10pt", "margin_reduction": 0, "spacing_factor": 0.8},
-        {"font_size": "10pt", "margin_reduction": 0.1, "spacing_factor": 0.7},
-        {"font_size": "10pt", "margin_reduction": 0.15, "spacing_factor": 0.6},
+        {
+            "font_size": "11pt",
+            "margin_reduction": 0,
+            "spacing_factor": 1.0,
+            "use_cormorant_font": False,
+        },
+        {
+            "font_size": "11pt",
+            "margin_reduction": 0,
+            "spacing_factor": 1.0,
+            "use_cormorant_font": True,
+        },
+        {
+            "font_size": "10pt",
+            "margin_reduction": 0,
+            "spacing_factor": 0.8,
+            "use_cormorant_font": True,
+        },
+        {
+            "font_size": "10pt",
+            "margin_reduction": 0.1,
+            "spacing_factor": 0.7,
+            "use_cormorant_font": True,
+        },
+        {
+            "font_size": "10pt",
+            "margin_reduction": 0.15,
+            "spacing_factor": 0.6,
+            "use_cormorant_font": True,
+        },
     ]
 
     for level, optimization in enumerate(optimization_levels, 1):

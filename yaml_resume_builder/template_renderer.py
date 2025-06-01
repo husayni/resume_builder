@@ -464,6 +464,14 @@ def _apply_optimization_params(template_content: str, optimization_params: Dict[
     Returns:
         str: The optimized template content.
     """
+    # Apply font changes
+    use_cormorant_font = optimization_params.get("use_cormorant_font", False)
+    if use_cormorant_font:
+        template_content = template_content.replace(
+            "% \\usepackage{CormorantGaramond}",
+            "\\usepackage{CormorantGaramond}",
+        )
+
     # Apply font size changes
     font_size = optimization_params.get("font_size", "11pt")
     template_content = template_content.replace(
@@ -523,7 +531,7 @@ def render_template(
     Args:
         data (dict): Data to render the template with.
         optimization_params (dict, optional): Parameters for optimizing the template for one page.
-            Expected keys: font_size, margin_reduction, spacing_factor
+            Expected keys: font_size, margin_reduction, spacing_factor, use_cormorant_font
 
     Returns:
         str: The rendered LaTeX content.
