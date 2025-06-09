@@ -4,7 +4,7 @@ This module contains functionality for rendering LaTeX templates.
 """
 
 import logging
-from typing import Any, Dict, List, Optional, Set, Union, cast
+from typing import Any, Dict, List, Optional, Set, Union
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -19,8 +19,8 @@ def escape_latex(text: Any) -> str:
     Returns:
         str: The escaped text.
     """
-    if not isinstance(text, str):
-        return cast(str, str(text))
+    # Convert to string if not already a string
+    text_str: str = text if isinstance(text, str) else str(text)
 
     # Define LaTeX special characters and their escaped versions
     latex_special_chars = {
@@ -38,9 +38,9 @@ def escape_latex(text: Any) -> str:
 
     # Replace special characters
     for char, replacement in latex_special_chars.items():
-        text = text.replace(char, replacement)
+        text_str = text_str.replace(char, replacement)
 
-    return text
+    return text_str
 
 
 # Define known fields for validation

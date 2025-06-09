@@ -35,7 +35,7 @@ def test_escape_latex() -> None:
     assert escape_latex(123) == "123"
     assert escape_latex(None) == "None"
     assert escape_latex([]) == "[]"
-    assert escape_latex({}) == "{}"
+    assert escape_latex({}) == "\\{\\}"  # Curly braces are escaped in LaTeX
 
 
 def test_render_template() -> None:
