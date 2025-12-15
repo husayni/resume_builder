@@ -119,7 +119,7 @@ jobs:
 
       - name: Cache APT packages
         id: cache-apt
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: /var/cache/apt/archives
           key: ${{ runner.os }}-apt-texlive
